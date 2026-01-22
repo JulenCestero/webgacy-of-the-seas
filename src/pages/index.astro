@@ -1,4 +1,5 @@
 ---
+import "../styles/global.css";
 ---
 
 <!doctype html>
@@ -8,8 +9,16 @@
     <meta name="viewport" content="width=device-width" />
     <title>Legacy of the Seas - Metal Band</title>
   </head>
-  <body class="bg-black text-white">
-    <h1>Legacy of the Seas</h1>
-    <p>Sitio en construcción...</p>
+  <body>
+    <main class="min-h-screen flex flex-col items-center justify-center p-8">
+      <h1 class="text-5xl md:text-7xl font-metal text-gradient mb-4">
+        Legacy of the Seas
+      </h1>
+      <p class="text-xl text-gray-400 mb-8">Sitio en construcción...</p>
+      <div class="flex gap-4">
+        <button class="btn-primary">Escuchar</button>
+        <button class="btn-secondary">Conciertos</button>
+      </div>
+    </main>
   </body>
 </html>

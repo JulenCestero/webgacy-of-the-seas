@@ -65,10 +65,34 @@ npm run preview     # Preview del build
 - Site URL: https://legacyoftheseas.netlify.app
 - Integración Tailwind activa
 
+## Paleta de Colores
+
+| Color | Uso | Valor |
+|-------|-----|-------|
+| `band-dark` | Fondo principal | `#0a0a0a` |
+| `band-red` | Acentos, CTAs | `#8b0000` |
+| `band-gold` | Detalles, bordes | `#d4af37` |
+
+## Tipografías
+
+- **Cinzel**: Títulos y headings (estilo metal/épico)
+- **Inter**: Cuerpo de texto
+
+## Componentes CSS
+
+```css
+.btn-primary    /* Botón rojo con hover */
+.btn-secondary  /* Botón outline dorado */
+.text-gradient  /* Gradiente rojo-dorado-rojo */
+```
+
 ## Historial de Cambios
 
 ### 2026-01-22
 - Inicialización del proyecto Astro
 - Configuración de Tailwind CSS con dark mode
+- Colores custom de la banda (band-dark, band-red, band-gold)
+- Tipografías Cinzel e Inter
+- Componentes CSS base (botones, gradientes)
 - Definición de colecciones de contenido (members, concerts)
-- Página index básica
+- Página index con estilos aplicados

@@ -1,0 +1,107 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ConcertCard from "../components/ConcertCard.astro";
+
+// Get all concerts and sort by date
+const allConcerts = await getCollection("concerts");
+const sortedConcerts = allConcerts.sort((a, b) =>
+  new Date(a.data.date).getTime() - new Date(b.data.date).getTime()
+);
+
+// Split into upcoming and past
+const now = new Date();
+const upcomingConcerts = sortedConcerts.filter(c => new Date(c.data.date) >= now);
+const pastConcerts = sortedConcerts.filter(c => new Date(c.data.date) < now).reverse();
+---
+
+<BaseLayout title="Conciertos" description="Próximos conciertos y fechas de la gira de Legacy of the Seas. Compra tus entradas y no te pierdas el directo.">
+  <!-- Hero section -->
+  <section class="py-20 bg-band-dark-50">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-6xl font-metal text-gradient mb-6">
+        Conciertos
+      </h1>
+      <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+        Vive la experiencia Legacy of the Seas en directo.
+        Consulta nuestras próximas fechas y consigue tus entradas.
+      </p>
+    </div>
+  </section>
+
+  <!-- Upcoming concerts -->
+  <section class="py-16 bg-band-dark">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl md:text-3xl font-metal text-band-gold mb-8">
+        Próximos Conciertos
+      </h2>
+
+      {upcomingConcerts.length > 0 ? (
+        <div class="space-y-4 max-w-4xl">
+          {upcomingConcerts.map((concert) => (
+            <ConcertCard
+              title={concert.data.title}
+              date={concert.data.date}
+              venue={concert.data.venue}
+              city={concert.data.city}
+              ticketUrl={concert.data.ticketUrl}
+              isSoldOut={concert.data.isSoldOut}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="bg-band-dark-100 border border-band-gold/20 rounded-lg p-8 text-center max-w-2xl">
+          <p class="text-gray-400">
+            No hay conciertos programados por el momento.
+            <br />
+            ¡Síguenos en redes para estar al tanto de las novedades!
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Past concerts -->
+  {pastConcerts.length > 0 && (
+    <section class="py-16 bg-band-dark-50">
+      <div class="container mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-metal text-gray-500 mb-8">
+          Conciertos Pasados
+        </h2>
+
+        <div class="space-y-4 max-w-4xl">
+          {pastConcerts.map((concert) => (
+            <ConcertCard
+              title={concert.data.title}
+              date={concert.data.date}
+              venue={concert.data.venue}
+              city={concert.data.city}
+              isSoldOut={concert.data.isSoldOut}
+              isPast={true}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Newsletter CTA -->
+  <section class="py-16 bg-band-dark">
+    <div class="container mx-auto px-4 text-center">
+      <div class="max-w-2xl mx-auto bg-band-dark-100 border border-band-gold/20 rounded-lg p-8">
+        <h2 class="text-xl md:text-2xl font-metal text-band-gold mb-4">
+          No te pierdas ninguna fecha
+        </h2>
+        <p class="text-gray-400 mb-6">
+          Suscríbete para recibir notificaciones cuando anunciemos nuevos conciertos.
+        </p>
+        <a href="/contacto" class="btn-secondary inline-flex items-center gap-2">
+          Contactar
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

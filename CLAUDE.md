@@ -110,3 +110,22 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 - `band-dark`: #0a0a0a (fondo)
 - `band-red`: #8b0000 (acentos)
 - `band-gold`: #d4af37 (detalles)
+
+---
+
+## Proceso de Validación por Issue
+
+### Pasos Obligatorios
+1. **Verificar que funciona**: Ejecutar `npm run build` y/o `npm run dev`
+2. **Tomar screenshot**: Usar Playwright para capturar validación visual en `validations/`
+3. **Hacer commit**: Con co-author de Claude
+4. **Cerrar issue**: `bd close <issue-id> --reason="..."`
+5. **Compactar contexto**: Si el contexto es muy largo
+
+### Carpeta de Validaciones
+```
+validations/
+├── legacy-wv0-header-footer.png
+├── legacy-xxx-feature.png
+└── ...
+```

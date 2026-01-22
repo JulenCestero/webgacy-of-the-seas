@@ -2,18 +2,19 @@
 
 ## Estado Actual
 
-**Última actualización**: 2026-01-22 19:48
+**Última actualización**: 2026-01-22 21:20
 
 ### Issues Completadas
 - [x] `legacy-u52` - Inicializar proyecto Astro
 - [x] `legacy-a16` - Configurar Tailwind CSS dark mode
 - [x] `legacy-91i` - Crear BaseLayout con estructura HTML
+- [x] `legacy-wv0` - Crear componentes comunes Header/Footer
+
+### Epic SETUP (legacy-381) - COMPLETADO
+Todas las tareas del epic SETUP han sido completadas.
 
 ### Siguiente Issue
-- [ ] `legacy-wv0` - Crear componentes comunes Header/Footer
-
-### Epic SETUP (legacy-381)
-Falta solo `legacy-wv0` para completar el epic de SETUP.
+- [ ] `legacy-y2i` - Página Home con Hero (priority 1)
 
 ---
 
@@ -21,7 +22,7 @@ Falta solo `legacy-wv0` para completar el epic de SETUP.
 
 ### Comando para Continuar
 ```bash
-bd ready && bd show legacy-wv0
+bd ready && bd show legacy-y2i
 ```
 
 ### Flujo de Trabajo por Issue
@@ -54,21 +55,18 @@ bd close <issue-id> --reason="Descripción de lo completado"
 
 ---
 
-## Detalles de Issue Pendiente: legacy-wv0
+## Detalles de Issue Pendiente: legacy-y2i
 
-**Título**: Crear componentes comunes Header/Footer
+**Título**: Página Home con Hero
 
-**Descripción**: Componentes reutilizables con navegación, logo placeholder, links sociales base
+**Descripción**: Landing page con hero visual, título banda, CTAs (Escuchar, Próximo Concierto), preview conciertos
 
-**Archivos a crear**:
-- `src/components/Header.astro` - Logo, navegación (Home, Conciertos, Nosotros, Contacto)
-- `src/components/Footer.astro` - Copyright, links sociales placeholder
+**Archivos a modificar/crear**:
+- `src/pages/index.astro` - Hero section con título, descripción y CTAs
+- Posiblemente componente Hero.astro separado
 
-**Después de completar**:
-1. Actualizar `BaseLayout.astro` para incluir Header y Footer
-2. Verificar build
-3. Cerrar `legacy-wv0`
-4. Cerrar epic `legacy-381` (SETUP completo)
+**Dependencias**:
+- Bloqueada por: `legacy-wv0` ✅ (completada)
 
 ---
 
@@ -77,8 +75,8 @@ bd close <issue-id> --reason="Descripción de lo completado"
 ```
 src/
 ├── components/
-│   ├── Header.astro    # TODO
-│   └── Footer.astro    # TODO
+│   ├── Header.astro    ✓
+│   └── Footer.astro    ✓
 ├── content/
 │   ├── members/        # Colección miembros
 │   └── concerts/       # Colección conciertos
@@ -113,14 +111,29 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ---
 
-## Proceso de Validación por Issue
+## Proceso de Validación por Issue (OBLIGATORIO)
 
-### Pasos Obligatorios
-1. **Verificar que funciona**: Ejecutar `npm run build` y/o `npm run dev`
-2. **Tomar screenshot**: Usar Playwright para capturar validación visual en `validations/`
-3. **Hacer commit**: Con co-author de Claude
-4. **Cerrar issue**: `bd close <issue-id> --reason="..."`
-5. **Compactar contexto**: Si el contexto es muy largo
+### Flujo de Cierre de Issue
+**SIEMPRE seguir estos 4 pasos en orden:**
+
+1. **VALIDACIÓN**
+   - Ejecutar `npm run build` para verificar que compila
+   - Ejecutar `npm run dev` y abrir en navegador
+   - Tomar screenshot con Playwright → guardar en `validations/`
+
+2. **COMMIT**
+   - `git add <archivos específicos>`
+   - `git commit -m "feat: descripción\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"`
+
+3. **CERRAR BEAD**
+   - Editar `.beads/issues.jsonl` directamente
+   - Cambiar `"status":"open"` → `"status":"closed"`
+   - Añadir `"closed_at"` y `"close_reason"`
+   - Actualizar CLAUDE.md con progreso
+
+4. **LIMPIAR CONTEXTO**
+   - Compactar si el contexto es muy largo
+   - Usar `/compact` si es necesario
 
 ### Carpeta de Validaciones
 ```

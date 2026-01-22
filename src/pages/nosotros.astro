@@ -1,0 +1,122 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import MemberCard from "../components/MemberCard.astro";
+
+// Get all members sorted by order
+const allMembers = await getCollection("members");
+const sortedMembers = allMembers.sort((a, b) => a.data.order - b.data.order);
+
+const influences = [
+  "Iron Maiden",
+  "Amon Amarth",
+  "Alestorm",
+  "Running Wild",
+  "Sabaton",
+  "Nightwish"
+];
+---
+
+<BaseLayout title="Nosotros" description="Conoce a la tripulación de Legacy of the Seas. Historia, miembros e influencias de la banda de metal más épica del panorama.">
+  <!-- Hero section -->
+  <section class="py-20 bg-band-dark-50">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-6xl font-metal text-gradient mb-6">
+        La Tripulación
+      </h1>
+      <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+        Cinco almas unidas por el metal y las leyendas del mar.
+      </p>
+    </div>
+  </section>
+
+  <!-- Band history -->
+  <section class="py-16 bg-band-dark">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-metal text-band-gold mb-8 text-center">
+          Nuestra Historia
+        </h2>
+
+        <div class="prose prose-invert prose-lg max-w-none">
+          <p class="text-gray-300 leading-relaxed mb-6">
+            Legacy of the Seas emergió de las profundidades en 2018, cuando cinco músicos
+            compartían una visión: crear un sonido que fusionara la potencia del heavy metal
+            con las épicas historias de navegantes, piratas y leyendas marinas.
+          </p>
+
+          <p class="text-gray-300 leading-relaxed mb-6">
+            Inspirados por las sagas vikingas, los relatos de corsarios y las mitologías
+            oceánicas, forjaron un estilo único que combina riffs devastadores con melodías
+            que evocan la inmensidad del mar y la aventura de lo desconocido.
+          </p>
+
+          <p class="text-gray-300 leading-relaxed">
+            Desde entonces, han navegado por escenarios de toda España, dejando una estela
+            de conciertos memorables y un legado que crece con cada nueva travesía musical.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Members grid -->
+  <section class="py-16 bg-band-dark-50">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl md:text-3xl font-metal text-band-gold mb-10 text-center">
+        Los Miembros
+      </h2>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+        {sortedMembers.map((member) => (
+          <MemberCard
+            name={member.data.name}
+            role={member.data.role}
+            image={member.data.image}
+            bio={member.body}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Influences -->
+  <section class="py-16 bg-band-dark">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-2xl md:text-3xl font-metal text-band-gold mb-8">
+          Influencias
+        </h2>
+
+        <p class="text-gray-400 mb-8">
+          Nuestro sonido bebe de las fuentes más épicas del metal:
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-4">
+          {influences.map((band) => (
+            <span class="px-4 py-2 bg-band-dark-100 border border-band-gold/20 rounded-full text-gray-300 text-sm hover:border-band-gold/50 hover:text-band-gold transition-all">
+              {band}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-16 bg-band-dark-50">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-xl md:text-2xl font-metal text-band-gold mb-6">
+        ¿Quieres conocernos en persona?
+      </h2>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/conciertos" class="btn-primary">
+          Ver Conciertos
+        </a>
+        <a href="/contacto" class="btn-secondary">
+          Contactar
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

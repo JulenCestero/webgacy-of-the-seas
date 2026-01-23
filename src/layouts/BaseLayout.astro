@@ -76,15 +76,15 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     </main>
     <Footer />
 
-    <!-- Redirect to admin after Netlify Identity login -->
+    <!-- Netlify Identity handler -->
     <script is:inline>
       if (window.netlifyIdentity) {
-        window.netlifyIdentity.on("init", user => {
-          if (!user) {
-            window.netlifyIdentity.on("login", () => {
-              document.location.href = "/admin/";
-            });
-          }
+        // Initialize the widget - this processes invite/recovery tokens in URL
+        window.netlifyIdentity.init();
+
+        // Redirect to admin after login or signup
+        window.netlifyIdentity.on("login", () => {
+          document.location.href = "/admin/";
         });
       }
     </script>

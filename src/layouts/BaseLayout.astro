@@ -78,17 +78,31 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
     <!-- Netlify Identity handler -->
     <script is:inline>
-      if (window.netlifyIdentity) {
+      function initIdentity() {
+        const identity = window.netlifyIdentity;
+        if (!identity) return;
+
         // Redirect to admin after login or signup
-        window.netlifyIdentity.on("login", () => {
+        identity.on("login", () => {
           document.location.href = "/admin/";
         });
 
         // Check for invite/recovery token in URL and open modal
         const hash = window.location.hash;
         if (hash.includes("invite_token") || hash.includes("recovery_token") || hash.includes("confirmation_token")) {
-          window.netlifyIdentity.open();
+          identity.open();
         }
+      }
+
+      // Run when widget is ready
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.on("init", initIdentity);
+      } else {
+        document.addEventListener("DOMContentLoaded", () => {
+          if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", initIdentity);
+          }
+        });
       }
     </script>
   </body>

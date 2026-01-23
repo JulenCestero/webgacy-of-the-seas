@@ -1,4 +1,6 @@
 ---
+import SocialLinks from "./SocialLinks.astro";
+
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/conciertos", label: "Conciertos" },
@@ -40,6 +42,11 @@ const currentPath = Astro.url.pathname;
           </li>
         ))}
       </ul>
+
+      <!-- Social Links (Desktop) -->
+      <div class="hidden lg:block">
+        <SocialLinks size="sm" />
+      </div>
 
       <!-- Mobile Menu Button -->
       <button

@@ -1,0 +1,63 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import MerchCard from "../components/MerchCard.astro";
+import { getCollection } from "astro:content";
+
+// Get all merch items sorted by order
+const allMerch = await getCollection("merch");
+const sortedMerch = allMerch.sort((a, b) => (a.data.order || 99) - (b.data.order || 99));
+---
+
+<BaseLayout title="Tienda" description="Consigue el merchandising oficial de Legacy of the Seas. CDs, camisetas y más.">
+  <!-- Hero section -->
+  <section class="py-20 bg-depth-shallow">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-6xl font-metal text-gradient mb-6">
+        Tienda
+      </h1>
+      <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+        Lleva el legado contigo. Merchandising oficial de Legacy of the Seas.
+      </p>
+    </div>
+  </section>
+
+  <!-- Products grid -->
+  <section class="py-16 bg-depth-mid">
+    <div class="container mx-auto px-4">
+      {sortedMerch.length > 0 ? (
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          {sortedMerch.map((item) => (
+            <MerchCard
+              name={item.data.name}
+              description={item.data.description}
+              image={item.data.image}
+              price={item.data.price}
+              buyUrl={item.data.buyUrl}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <p class="text-gray-400 text-lg">
+            Próximamente nuevos productos...
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Contact CTA -->
+  <section class="py-16 bg-depth-deep">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-2xl md:text-3xl font-metal text-band-sea mb-4">
+        ¿Buscas algo especial?
+      </h2>
+      <p class="text-gray-400 mb-8 max-w-xl mx-auto">
+        Si quieres información sobre disponibilidad, envíos internacionales o pedidos especiales, no dudes en contactarnos.
+      </p>
+      <a href="/contacto" class="btn-primary">
+        Contactar
+      </a>
+    </div>
+  </section>
+</BaseLayout>

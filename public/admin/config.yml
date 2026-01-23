@@ -11,6 +11,29 @@ locale: "es"
 
 # Collections
 collections:
+  # Archivo / Blog
+  - name: "archivo"
+    label: "Archivo"
+    folder: "src/content/archivo"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Título", name: "title", widget: "string" }
+      - { label: "Fecha", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false }
+      - { label: "Imagen destacada", name: "image", widget: "image", required: false }
+      - { label: "Extracto", name: "excerpt", widget: "text", required: false }
+      - label: "Etiquetas"
+        name: "tags"
+        widget: "list"
+        required: false
+        field: { label: "Etiqueta", name: "tag", widget: "string" }
+      - label: "Galería de fotos"
+        name: "gallery"
+        widget: "list"
+        required: false
+        field: { label: "Imagen", name: "image", widget: "image" }
+      - { label: "Contenido", name: "body", widget: "markdown" }
+
   # Miembros de la banda
   - name: "members"
     label: "Miembros"
@@ -38,6 +61,24 @@ collections:
       - { label: "URL Entradas", name: "ticketUrl", widget: "string", required: false }
       - { label: "Agotado", name: "isSoldOut", widget: "boolean", default: false }
       - { label: "Descripción", name: "body", widget: "markdown", required: false }
+
+  # Merchandising
+  - name: "merch"
+    label: "Tienda / Merch"
+    folder: "src/content/merch"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Nombre", name: "name", widget: "string" }
+      - { label: "Descripción", name: "description", widget: "text" }
+      - { label: "Imagen", name: "image", widget: "image", required: false }
+      - { label: "Precio", name: "price", widget: "string", required: false }
+      - label: "URL de compra"
+        name: "buyUrl"
+        widget: "string"
+        required: false
+        hint: "Si está vacío, el producto se mostrará como 'Sin Stock'"
+      - { label: "Orden", name: "order", widget: "number", default: 10 }
 
   # Configuración del sitio
   - name: "settings"

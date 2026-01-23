@@ -1,9 +1,9 @@
 ---
-title: "Legacy of the Seas en Barcelona"
+title: Legacy of the Seas en Placeholder 2
 date: 2026-02-15
-venue: "Sala Apolo"
-city: "Barcelona"
-ticketUrl: "https://tickets.example.com/barcelona"
+venue: Sala Apolo
+city: Barcelona
+ticketUrl: https://tickets.example.com/barcelona
 isSoldOut: false
 ---
 

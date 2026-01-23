@@ -20,7 +20,7 @@
 ## Características Implementadas
 
 ### Páginas
-- **Home** (`/`) - Hero con logo, Spotify embed, preview conciertos, newsletter
+- **Home** (`/`) - Hero con logo, YouTube videoclip, Spotify embed, preview conciertos, newsletter
 - **Conciertos** (`/conciertos`) - Listado separado próximos/pasados
 - **Nosotros** (`/nosotros`) - Grid de miembros con modales de biografía
 - **Tienda** (`/tienda`) - Merchandising con lógica de stock
@@ -37,9 +37,10 @@
 ### Integraciones
 | Servicio | Uso | Configuración |
 |----------|-----|---------------|
+| **YouTube** | Videoclip en Home | Editable desde CMS → Media/Embeds |
+| **Spotify** | Embed álbum | Editable desde CMS → Media/Embeds |
 | **Mailchimp** | Newsletter | `NewsletterSignup.astro` - ID configurado |
 | **Netlify Forms** | Contacto | `data-netlify="true"` + honeypot |
-| **Spotify** | Embed álbum | URI del disco "Leyendas de una Eternidad" |
 | **Decap CMS** | Gestión contenido | `/admin/` con Netlify Identity |
 
 ---
@@ -95,6 +96,20 @@ gallery: ["/uploads/foto1.jpg", "/uploads/foto2.jpg"]
 body: |
   Contenido en markdown...
 ```
+
+#### Media / Embeds (`content/settings/media.json`)
+```json
+{
+  "youtubeVideoUrl": "https://www.youtube.com/watch?v=XXXXX",
+  "spotifyAlbumUri": "spotify:album:XXXXX"
+}
+```
+
+**Cómo cambiar el videoclip o álbum:**
+1. Ir a `/admin/` → Configuración → Media / Embeds
+2. Pegar la URL de YouTube (cualquier formato: watch, youtu.be, embed)
+3. Pegar el URI de Spotify del álbum
+4. Guardar → Se actualiza automáticamente en la Home
 
 ---
 
@@ -205,6 +220,7 @@ Opción viable si en el futuro se usa Bandsintown activamente para promoción.
 ## Historial de Cambios
 
 ### 2026-01-24
+- Embed de YouTube videoclip en Home (editable desde CMS)
 - Sección de tienda con CMS
 - Integración Mailchimp real
 - Configuración contacto Netlify

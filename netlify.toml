@@ -5,13 +5,6 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Redirects for SPA-like behavior (optional, Astro handles this)
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  conditions = {Role = ["admin"]}
-
 # Headers for security and caching
 [[headers]]
   for = "/*"

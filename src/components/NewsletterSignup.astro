@@ -1,0 +1,88 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  compact?: boolean;
+}
+
+const {
+  title = "Únete a la tripulación",
+  description = "Suscríbete para recibir noticias, fechas de conciertos y contenido exclusivo.",
+  compact = false,
+} = Astro.props;
+
+// Mailchimp form action URL - reemplazar con la URL real del formulario
+const mailchimpUrl = "https://legacyoftheseas.us21.list-manage.com/subscribe/post";
+const mailchimpU = "XXXXXXXXXXXXXXXXXXXXXXXX"; // Reemplazar con el valor real de u
+const mailchimpId = "XXXXXXXXXXXX"; // Reemplazar con el valor real de id
+---
+
+<div class={compact ? "" : "bg-band-dark-100 border border-band-gold/20 rounded-lg p-6 md:p-8"}>
+  {!compact && (
+    <div class="text-center mb-6">
+      <h3 class="text-xl md:text-2xl font-metal text-band-gold mb-2">
+        {title}
+      </h3>
+      <p class="text-gray-400 text-sm">
+        {description}
+      </p>
+    </div>
+  )}
+
+  <form
+    action={mailchimpUrl}
+    method="post"
+    id="mc-embedded-subscribe-form"
+    name="mc-embedded-subscribe-form"
+    class="validate"
+    target="_blank"
+    novalidate
+  >
+    <input type="hidden" name="u" value={mailchimpU} />
+    <input type="hidden" name="id" value={mailchimpId} />
+
+    <div class={compact ? "flex gap-2" : "flex flex-col sm:flex-row gap-3"}>
+      <!-- Email input -->
+      <div class="flex-1">
+        <label for="mce-EMAIL" class="sr-only">Email</label>
+        <input
+          type="email"
+          value=""
+          name="EMAIL"
+          id="mce-EMAIL"
+          placeholder="tu@email.com"
+          required
+          class={`w-full px-4 py-3 bg-band-dark border border-band-gold/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-band-gold focus:ring-1 focus:ring-band-gold transition-colors ${compact ? "text-sm" : ""}`}
+        />
+      </div>
+
+      <!-- Honeypot anti-spam -->
+      <div style="position: absolute; left: -5000px;" aria-hidden="true">
+        <input type="text" name="b_XXXXXXXXXXXXXXXXXXXXXXXX_XXXXXXXXXXXX" tabindex="-1" value="" />
+      </div>
+
+      <!-- Submit button -->
+      <button
+        type="submit"
+        name="subscribe"
+        id="mc-embedded-subscribe"
+        class={`btn-primary whitespace-nowrap ${compact ? "px-4 py-2 text-sm" : ""}`}
+      >
+        {compact ? "Suscribir" : "Suscribirme"}
+      </button>
+    </div>
+
+    <!-- Success/Error messages (handled by Mailchimp redirect) -->
+    <p class="text-xs text-gray-500 mt-3 text-center">
+      Al suscribirte aceptas recibir emails de Legacy of the Seas.
+      Puedes darte de baja en cualquier momento.
+    </p>
+  </form>
+</div>
+
+<style>
+  /* Hide Mailchimp branding if embedded */
+  :global(#mce-responses) {
+    display: none;
+  }
+</style>

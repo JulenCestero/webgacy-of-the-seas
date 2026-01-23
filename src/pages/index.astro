@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import ConcertPreview from "../components/ConcertPreview.astro";
 import SpotifyEmbed from "../components/SpotifyEmbed.astro";
+import NewsletterSignup from "../components/NewsletterSignup.astro";
 
 // Placeholder Spotify URI - replace with actual band album/playlist
 const spotifyUri = "spotify:album:4LH4d3cOWNNsVw41Gqt2kv"; // Example: Iron Maiden album
@@ -48,6 +49,15 @@ const spotifyUri = "spotify:album:4LH4d3cOWNNsVw41Gqt2kv"; // Example: Iron Maid
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
           </svg>
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter -->
+  <section class="py-16 bg-band-dark-50">
+    <div class="container mx-auto px-4">
+      <div class="max-w-xl mx-auto">
+        <NewsletterSignup />
       </div>
     </div>
   </section>

@@ -11,16 +11,16 @@ const {
   compact = false,
 } = Astro.props;
 
-// Mailchimp form action URL - reemplazar con la URL real del formulario
-const mailchimpUrl = "https://legacyoftheseas.us21.list-manage.com/subscribe/post";
-const mailchimpU = "XXXXXXXXXXXXXXXXXXXXXXXX"; // Reemplazar con el valor real de u
-const mailchimpId = "XXXXXXXXXXXX"; // Reemplazar con el valor real de id
+// Mailchimp form action URL
+const mailchimpUrl = "https://gmail.us2.list-manage.com/subscribe/post";
+const mailchimpU = "e65f0969bdae89ce6a523cdc2";
+const mailchimpId = "dcd925529c";
 ---
 
-<div class={compact ? "" : "bg-band-dark-100 border border-band-gold/20 rounded-lg p-6 md:p-8"}>
+<div class={compact ? "" : "bg-band-dark-100 border border-band-sea/20 rounded-lg p-6 md:p-8"}>
   {!compact && (
     <div class="text-center mb-6">
-      <h3 class="text-xl md:text-2xl font-metal text-band-gold mb-2">
+      <h3 class="text-xl md:text-2xl font-metal text-band-sea mb-2">
         {title}
       </h3>
       <p class="text-gray-400 text-sm">
@@ -52,13 +52,13 @@ const mailchimpId = "XXXXXXXXXXXX"; // Reemplazar con el valor real de id
           id="mce-EMAIL"
           placeholder="tu@email.com"
           required
-          class={`w-full px-4 py-3 bg-band-dark border border-band-gold/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-band-gold focus:ring-1 focus:ring-band-gold transition-colors ${compact ? "text-sm" : ""}`}
+          class={`w-full px-4 py-3 bg-band-dark border border-band-sea/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-band-sea focus:ring-1 focus:ring-band-sea transition-colors ${compact ? "text-sm" : ""}`}
         />
       </div>
 
       <!-- Honeypot anti-spam -->
       <div style="position: absolute; left: -5000px;" aria-hidden="true">
-        <input type="text" name="b_XXXXXXXXXXXXXXXXXXXXXXXX_XXXXXXXXXXXX" tabindex="-1" value="" />
+        <input type="text" name="b_e65f0969bdae89ce6a523cdc2_dcd925529c" tabindex="-1" value="" />
       </div>
 
       <!-- Submit button -->

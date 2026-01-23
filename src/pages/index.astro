@@ -3,12 +3,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import ConcertPreview from "../components/ConcertPreview.astro";
 import SpotifyEmbed from "../components/SpotifyEmbed.astro";
+import YouTubeEmbed from "../components/YouTubeEmbed.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import WaveDivider from "../components/WaveDivider.astro";
 import KrakenTentacles from "../components/KrakenTentacles.astro";
 
-// Album: Leyendas de una Eternidad (2024)
-const spotifyUri = "spotify:album:2f2fEmQkP6dBwOTNs47so9";
+// Load media settings from CMS
+import mediaSettings from "../content/settings/media.json";
+
+const youtubeUrl = mediaSettings.youtubeVideoUrl;
+const spotifyUri = mediaSettings.spotifyAlbumUri;
 ---
 
 <BaseLayout title="Inicio" description="Legacy of the Seas - Banda de Metal desde las profundidades del océano. Música épica, letras inmersivas y un sonido que te transportará.">
@@ -17,8 +21,8 @@ const spotifyUri = "spotify:album:2f2fEmQkP6dBwOTNs47so9";
   <!-- Wave transition from hero -->
   <WaveDivider color="#091418" />
 
-  <!-- Spotify section - Shallow waters -->
-  <section id="spotify" class="py-16 bg-depth-shallow">
+  <!-- Media section - Shallow waters -->
+  <section id="escuchanos" class="py-16 bg-depth-shallow">
     <div class="container mx-auto px-4">
       <div class="max-w-3xl mx-auto text-center">
         <h2 class="text-3xl md:text-4xl font-metal text-gradient mb-6">
@@ -28,8 +32,15 @@ const spotifyUri = "spotify:album:2f2fEmQkP6dBwOTNs47so9";
           Descubre nuestra música en tu plataforma favorita
         </p>
 
+        <!-- YouTube videoclip -->
+        {youtubeUrl && (
+          <div class="mb-8">
+            <YouTubeEmbed videoUrl={youtubeUrl} title="Legacy of the Seas - Videoclip" />
+          </div>
+        )}
+
         <!-- Spotify embed -->
-        <SpotifyEmbed spotifyUri={spotifyUri} height={352} />
+        {spotifyUri && <SpotifyEmbed spotifyUri={spotifyUri} height={352} />}
       </div>
     </div>
   </section>

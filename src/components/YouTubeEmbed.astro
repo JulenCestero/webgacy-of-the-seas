@@ -1,0 +1,40 @@
+---
+interface Props {
+  videoUrl: string;
+  title?: string;
+}
+
+const { videoUrl, title = "Video de Legacy of the Seas" } = Astro.props;
+
+// Extract video ID from various YouTube URL formats
+function getYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+const videoId = getYouTubeId(videoUrl);
+const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+---
+
+{embedUrl && (
+  <div class="youtube-embed rounded-lg overflow-hidden shadow-2xl shadow-black/50 border border-band-sea/20">
+    <div class="relative w-full" style="padding-bottom: 56.25%;">
+      <iframe
+        src={embedUrl}
+        title={title}
+        class="absolute inset-0 w-full h-full"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </div>
+)}

@@ -101,3 +101,17 @@ collections:
           - { label: "YouTube", name: "youtube", widget: "string", required: false }
           - { label: "Spotify", name: "spotify", widget: "string", required: false }
           - { label: "Bandcamp", name: "bandcamp", widget: "string", required: false }
+      - label: "Media / Embeds"
+        name: "media"
+        file: "src/content/settings/media.json"
+        fields:
+          - label: "Video de YouTube (Home)"
+            name: "youtubeVideoUrl"
+            widget: "string"
+            required: false
+            hint: "URL del videoclip que aparece en la sección Escúchanos. Ej: https://www.youtube.com/watch?v=XXXXX"
+          - label: "Álbum de Spotify (Home)"
+            name: "spotifyAlbumUri"
+            widget: "string"
+            required: false
+            hint: "URI del álbum de Spotify. Ej: spotify:album:2f2fEmQkP6dBwOTNs47so9"

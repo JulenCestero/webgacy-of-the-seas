@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+
 interface Props {
   name: string;
   role: string;
@@ -8,20 +10,31 @@ interface Props {
 
 const { name, role, image, bio } = Astro.props;
 
-// Placeholder image if none provided
-const imageSrc = image || "/placeholder-member.jpg";
+// Check if image exists
+const hasImage = image && image.length > 0;
 ---
 
 <article class="group">
   <div class="relative overflow-hidden rounded-lg bg-band-dark-100 border border-band-gold/20 hover:border-band-gold/50 transition-all">
     <!-- Image container with aspect ratio -->
     <div class="aspect-[3/4] relative overflow-hidden">
-      <!-- Placeholder background -->
-      <div class="absolute inset-0 bg-gradient-to-b from-band-dark-50 to-band-dark flex items-center justify-center">
-        <svg class="w-20 h-20 text-band-gold/30" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-        </svg>
-      </div>
+      {hasImage ? (
+        <!-- Real image with lazy loading -->
+        <img
+          src={image}
+          alt={`${name} - ${role}`}
+          loading="lazy"
+          decoding="async"
+          class="absolute inset-0 w-full h-full object-cover object-top"
+        />
+      ) : (
+        <!-- Placeholder background -->
+        <div class="absolute inset-0 bg-gradient-to-b from-band-dark-50 to-band-dark flex items-center justify-center">
+          <svg class="w-20 h-20 text-band-gold/30" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+      )}
 
       <!-- Overlay gradient -->
       <div class="absolute inset-0 bg-gradient-to-t from-band-dark via-transparent to-transparent opacity-80"></div>

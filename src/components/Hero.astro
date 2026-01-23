@@ -2,17 +2,33 @@
 interface Props {
   title?: string;
   subtitle?: string;
+  logoSrc?: string;
+  backgroundImage?: string;
 }
 
 const {
   title = "Legacy of the Seas",
-  subtitle = "Navegando las aguas del metal desde tiempos inmemoriales"
+  subtitle = "Navegando las aguas del metal desde tiempos inmemoriales",
+  logoSrc,
+  backgroundImage
 } = Astro.props;
+
+const hasLogo = logoSrc && logoSrc.length > 0;
+const hasBackground = backgroundImage && backgroundImage.length > 0;
 ---
 
 <section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
   <!-- Background with overlay -->
   <div class="absolute inset-0 bg-gradient-to-b from-band-dark via-band-dark-50 to-band-dark z-0">
+    {hasBackground && (
+      <img
+        src={backgroundImage}
+        alt=""
+        loading="eager"
+        decoding="async"
+        class="absolute inset-0 w-full h-full object-cover opacity-30"
+      />
+    )}
     <!-- Decorative elements -->
     <div class="absolute inset-0 opacity-10">
       <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-band-red rounded-full blur-3xl"></div>
@@ -26,8 +42,18 @@ const {
   <div class="relative z-10 container mx-auto px-4 text-center">
     <!-- Logo/Icon -->
     <div class="mb-8 flex justify-center">
-      <div class="w-24 h-24 md:w-32 md:h-32 bg-band-dark-100 rounded-full flex items-center justify-center border-4 border-band-gold shadow-[0_0_30px_rgba(212,175,55,0.3)]">
-        <span class="font-metal text-band-gold text-4xl md:text-5xl font-bold">LS</span>
+      <div class="w-24 h-24 md:w-32 md:h-32 bg-band-dark-100 rounded-full flex items-center justify-center border-4 border-band-gold shadow-[0_0_30px_rgba(212,175,55,0.3)] overflow-hidden">
+        {hasLogo ? (
+          <img
+            src={logoSrc}
+            alt={`${title} logo`}
+            loading="eager"
+            decoding="async"
+            class="w-full h-full object-contain p-2"
+          />
+        ) : (
+          <span class="font-metal text-band-gold text-4xl md:text-5xl font-bold">LS</span>
+        )}
       </div>
     </div>
 

@@ -1,0 +1,62 @@
+backend:
+  name: git-gateway
+  branch: master
+
+# Media files will be stored in public/uploads
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+# Locale
+locale: "es"
+
+# Collections
+collections:
+  # Miembros de la banda
+  - name: "members"
+    label: "Miembros"
+    folder: "src/content/members"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Nombre", name: "name", widget: "string" }
+      - { label: "Rol", name: "role", widget: "string" }
+      - { label: "Imagen", name: "image", widget: "image", required: false }
+      - { label: "Orden", name: "order", widget: "number", default: 0 }
+      - { label: "Biografía", name: "body", widget: "markdown" }
+
+  # Conciertos
+  - name: "concerts"
+    label: "Conciertos"
+    folder: "src/content/concerts"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Título", name: "title", widget: "string" }
+      - { label: "Fecha", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false }
+      - { label: "Sala/Venue", name: "venue", widget: "string" }
+      - { label: "Ciudad", name: "city", widget: "string" }
+      - { label: "URL Entradas", name: "ticketUrl", widget: "string", required: false }
+      - { label: "Agotado", name: "isSoldOut", widget: "boolean", default: false }
+      - { label: "Descripción", name: "body", widget: "markdown", required: false }
+
+  # Configuración del sitio
+  - name: "settings"
+    label: "Configuración"
+    files:
+      - label: "Información General"
+        name: "general"
+        file: "src/content/settings/general.json"
+        fields:
+          - { label: "Nombre de la banda", name: "bandName", widget: "string", default: "Legacy of the Seas" }
+          - { label: "Eslogan", name: "tagline", widget: "string" }
+          - { label: "Email Booking", name: "bookingEmail", widget: "string" }
+          - { label: "Email Prensa", name: "pressEmail", widget: "string" }
+      - label: "Redes Sociales"
+        name: "social"
+        file: "src/content/settings/social.json"
+        fields:
+          - { label: "Instagram", name: "instagram", widget: "string", required: false }
+          - { label: "Facebook", name: "facebook", widget: "string", required: false }
+          - { label: "YouTube", name: "youtube", widget: "string", required: false }
+          - { label: "Spotify", name: "spotify", widget: "string", required: false }
+          - { label: "Bandcamp", name: "bandcamp", widget: "string", required: false }

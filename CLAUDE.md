@@ -1,40 +1,11 @@
-# Legacy of the Seas - Progreso del Proyecto
+# Legacy of the Seas - Web Oficial
 
 ## Estado Actual
 
-**Última actualización**: 2026-01-23 08:58
+**Última actualización**: 2026-01-24
 
-### Epics Completados
-- [x] **SETUP** (legacy-381) - Fundación del Proyecto
-- [x] **PAGES** (legacy-pni) - Páginas Core del MVP
-- [x] **INTEGRATIONS** (legacy-gcq) - Integraciones Externas
-- [x] **CMS** (legacy-ebo) - Gestión de Contenido
-- [x] **LAUNCH** (legacy-iep) - SEO y Despliegue
-
-### Issues Completadas
-- [x] `legacy-u52` - Inicializar proyecto Astro
-- [x] `legacy-a16` - Configurar Tailwind CSS dark mode
-- [x] `legacy-91i` - Crear BaseLayout con estructura HTML
-- [x] `legacy-wv0` - Crear componentes comunes Header/Footer
-- [x] `legacy-y2i` - Página Home con Hero
-- [x] `legacy-7b7` - Página de Conciertos
-- [x] `legacy-66t` - Página Nosotros (About)
-- [x] `legacy-8rn` - Página de Contacto
-- [x] `legacy-79s` - Embed de Spotify
-- [x] `legacy-6f2` - Links redes sociales
-- [x] `legacy-06q` - Newsletter signup Mailchimp
-- [x] `legacy-768` - Formulario contacto Netlify Forms
-- [x] `legacy-cfj` - Configurar Decap CMS
-- [x] `legacy-5p1` - Colección Miembros en CMS
-- [x] `legacy-avu` - Colección Conciertos en CMS
-- [x] `legacy-n45` - Optimización SEO
-- [x] `legacy-s97` - Optimización imágenes
-- [x] `legacy-t6k` - Deploy a Netlify
-- [x] `legacy-jep` - Documentación usuario CMS
-- [x] `legacy-bga` - Testing final QA
-
-### Issue Pendiente (Final)
-- [ ] `legacy-fin` - Adaptar placeholders e imágenes reales
+### Proyecto Completado ✅
+La web está completamente funcional con todas las características implementadas.
 
 ---
 
@@ -43,94 +14,191 @@
 ```
 src/
 ├── components/
-│   ├── Header.astro         ✓
-│   ├── Footer.astro         ✓
-│   ├── Hero.astro           ✓
-│   ├── ConcertPreview.astro ✓
-│   ├── ConcertCard.astro    ✓
-│   ├── MemberCard.astro     ✓
-│   ├── SpotifyEmbed.astro   ✓
-│   ├── SocialLinks.astro    ✓
-│   └── NewsletterSignup.astro ✓
+│   ├── Header.astro           # Navegación principal con menú móvil
+│   ├── Footer.astro           # Pie de página con links y redes
+│   ├── Hero.astro             # Portada con logo animado
+│   ├── ConcertCard.astro      # Tarjeta de concierto individual
+│   ├── ConcertPreview.astro   # Preview conciertos en home
+│   ├── MemberCard.astro       # Tarjeta de miembro de la banda
+│   ├── MemberModal.astro      # Modal con biografía expandida
+│   ├── MerchCard.astro        # Tarjeta producto (con lógica stock)
+│   ├── SpotifyEmbed.astro     # Embed de Spotify responsive
+│   ├── SocialLinks.astro      # Links redes sociales (3 tamaños)
+│   ├── NewsletterSignup.astro # Formulario Mailchimp
+│   ├── WaveDivider.astro      # Separador de olas SVG animado
+│   ├── KrakenTentacles.astro  # Tentáculos decorativos (abismo)
+│   ├── Bubbles.astro          # Burbujas para secciones
+│   ├── SideBubbles.astro      # Burbujas laterales globales
+│   └── Lightbox.astro         # Galería de imágenes modal
 ├── content/
-│   ├── members/             ✓ (5 miembros)
-│   ├── concerts/            ✓ (4 conciertos)
-│   └── settings/            ✓ (general.json, social.json)
+│   ├── members/               # 4 miembros de la banda
+│   ├── concerts/              # 4 conciertos de ejemplo
+│   ├── merch/                 # 2 productos (CD + camiseta)
+│   ├── archivo/               # 1 entrada de blog
+│   └── settings/              # general.json, social.json
 ├── layouts/
-│   └── BaseLayout.astro     ✓
+│   └── BaseLayout.astro       # Layout con SEO, Schema.org, favicons
 ├── pages/
-│   ├── index.astro          ✓
-│   ├── conciertos.astro     ✓
-│   ├── nosotros.astro       ✓
-│   └── contacto.astro       ✓
-└── styles/
-    └── global.css           ✓
+│   ├── index.astro            # Home con efecto inmersión
+│   ├── conciertos.astro       # Listado próximos/pasados
+│   ├── nosotros.astro         # Equipo con modales
+│   ├── tienda.astro           # Merchandising con CMS
+│   ├── contacto.astro         # Formulario Netlify Forms
+│   └── archivo/               # Blog con [slug].astro
+├── styles/
+│   └── global.css             # Estilos, animaciones, utilidades
+└── content.config.ts          # Definición colecciones Astro
 
 public/
 ├── admin/
-│   ├── index.html           ✓ (Decap CMS)
-│   └── config.yml           ✓
-└── uploads/                 ✓ (para imágenes CMS)
+│   ├── index.html             # Decap CMS entry point
+│   └── config.yml             # Colecciones y campos CMS
+├── uploads/
+│   └── merch/                 # Imágenes productos
+├── images/
+│   ├── logo/                  # logo-ls.png, logo-horizontal.png
+│   └── band/                  # Fotos de la banda
+├── favicon.png                # 32x32 (cyan LS)
+├── favicon-192.png            # 192x192
+└── apple-touch-icon.png       # 180x180
 
-docs/
-└── cms-guide.md             ✓
-
-netlify.toml                 ✓
+netlify.toml                   # Config deploy, headers, redirects
 ```
 
 ---
 
-## Procedimiento para Cada Issue
+## Páginas
 
-### Flujo de Trabajo por Issue
+| Ruta | Archivo | Descripción |
+|------|---------|-------------|
+| `/` | index.astro | Home con Hero, Spotify, Conciertos, Newsletter |
+| `/conciertos` | conciertos.astro | Próximos y pasados conciertos |
+| `/nosotros` | nosotros.astro | Miembros con biografías en modal |
+| `/tienda` | tienda.astro | Merchandising con lógica stock |
+| `/archivo` | archivo/index.astro | Blog/noticias |
+| `/archivo/[slug]` | archivo/[slug].astro | Entrada individual |
+| `/contacto` | contacto.astro | Formulario de contacto |
+| `/admin` | admin/index.html | CMS (Decap) |
+
+---
+
+## Diseño Visual
+
+### Paleta de colores
+```css
+band-dark: #0a0a0a      /* Fondo principal */
+band-sea: #00CED1       /* Turquesa - acento principal */
+band-red: #8b0000       /* Rojo oscuro */
+band-gold: #d4af37      /* Dorado - detalles */
+```
+
+### Efecto de inmersión (scroll)
+```css
+depth-surface: #0a1215  /* Arriba - más claro */
+depth-shallow: #091418
+depth-mid: #071216
+depth-deep: #050f14
+depth-abyss: #030a10    /* Abajo - más oscuro */
+```
+
+### Elementos decorativos
+- **WaveDivider**: Olas SVG entre secciones
+- **SideBubbles**: Burbujas animadas en laterales (fixed)
+- **KrakenTentacles**: Tentáculos sutiles en la zona del newsletter
+
+### Fuentes
+- **Cinzel** (serif): Títulos, estilo épico/metal
+- **Inter** (sans-serif): Cuerpo de texto
+
+---
+
+## Integraciones
+
+### Mailchimp Newsletter
+```
+Archivo: src/components/NewsletterSignup.astro
+URL: gmail.us2.list-manage.com
+u: e65f0969bdae89ce6a523cdc2
+id: dcd925529c
+```
+
+### Netlify Forms
+```
+Archivo: src/pages/contacto.astro
+Atributo: data-netlify="true"
+Honeypot: netlify-honeypot="bot-field"
+```
+Configurar notificaciones en: Netlify → Site → Forms → Notifications
+
+### Spotify
+```
+Archivo: src/components/SpotifyEmbed.astro
+Album: spotify:album:2f2fEmQkP6dBwOTNs47so9
+```
+
+---
+
+## CMS (Decap)
+
+**Acceso**: `https://legacyoftheseas.com/admin/`
+
+### Colecciones
+| Colección | Carpeta | Campos principales |
+|-----------|---------|-------------------|
+| Miembros | content/members/ | name, role, image, order, bio |
+| Conciertos | content/concerts/ | title, date, venue, city, ticketUrl, isSoldOut |
+| Tienda | content/merch/ | name, description, image, price, buyUrl, order |
+| Archivo | content/archivo/ | title, date, image, excerpt, tags, gallery, body |
+| Config | content/settings/ | general.json, social.json |
+
+### Tienda - Lógica de stock
+- **buyUrl con valor** → Imagen normal + "Comprar" → URL externa
+- **buyUrl vacío** → Imagen gris + "Sin Stock" + "Contáctanos" → /contacto
+
+---
+
+## Comandos
 
 ```bash
-# 1. Ver issue disponible y reclamarla
-bd show <issue-id>
-bd update <issue-id> --status=in_progress
-
-# 2. Implementar la funcionalidad
-# ... escribir código ...
-
-# 3. Verificar que funciona
-npm run build
-
-# 4. Commit
-git add <archivos>
-git commit -m "feat: descripción
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
-
-# 5. Cerrar issue
-# Editar .beads/issues.jsonl
-# Cambiar status a "closed", añadir closed_at y close_reason
-
-# 6. Actualizar CLAUDE.md con progreso
+npm run dev        # Desarrollo (localhost:4321)
+npm run build      # Build producción
+npm run preview    # Preview del build
 ```
+
+---
+
+## Deploy (Netlify)
+
+- **Build command**: `npm run build`
+- **Publish directory**: `dist`
+- **Node version**: 18+
+- **Identity**: Habilitado (para CMS)
 
 ---
 
 ## Notas Técnicas
 
 ### Commits
-Siempre incluir co-author:
 ```
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ```
 
-### Colores de la Banda
-- `band-dark`: #0a0a0a (fondo)
-- `band-red`: #8b0000 (acentos)
-- `band-gold`: #d4af37 (detalles)
+### Optimización imágenes
+- Usar `npx sharp` para comprimir
+- Productos: 600x600px, JPG, ~80KB
+- Comando: `npx sharp input.png -o output.jpg -- resize 600 600`
 
-### Deploy
-El proyecto está configurado para Netlify:
-- Build command: `npm run build`
-- Publish directory: `dist`
-- Netlify Identity habilitado para CMS
+### Opción futura: Bandsintown
+Investigado pero no implementado. Widget oficial disponible en artists.bandsintown.com con sincronización automática. No se implementó para evitar duplicar gestión de conciertos (ya existe en CMS).
 
-### CMS
-Acceso: `/admin/`
-- Gestión de miembros y conciertos
-- Configuración general y redes sociales
-- Documentación en `docs/cms-guide.md`
+---
+
+## Redes Sociales (configuradas)
+
+- Instagram: @legacy.of.the.seas
+- Facebook: /legacy.of.the.seas
+- YouTube: @legacyoftheseas
+- Spotify: artist/0VfU5iDeWVTKfvhyos3Sih
+- Bandcamp: legacy-of-the-seas.bandcamp.com
+- TikTok: @legacy.of.the.seas
+- X/Twitter: @legacyoftheseas

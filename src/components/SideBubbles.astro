@@ -1,0 +1,126 @@
+---
+// Lateral bubbles that rise along the sides of the page
+---
+
+<div class="side-bubbles-container">
+  <!-- Left side bubbles -->
+  <div class="side-bubbles side-bubbles-left">
+    {Array.from({ length: 15 }).map((_, i) => (
+      <div
+        class="bubble"
+        style={`
+          --delay: ${Math.random() * 20}s;
+          --duration: ${20 + Math.random() * 15}s;
+          --size: ${2 + Math.random() * 5}px;
+          --top: ${Math.random() * 100}%;
+          --left: ${Math.random() * 100}%;
+          --drift: ${-20 + Math.random() * 40}px;
+        `}
+      />
+    ))}
+  </div>
+
+  <!-- Right side bubbles -->
+  <div class="side-bubbles side-bubbles-right">
+    {Array.from({ length: 15 }).map((_, i) => (
+      <div
+        class="bubble"
+        style={`
+          --delay: ${Math.random() * 20}s;
+          --duration: ${20 + Math.random() * 15}s;
+          --size: ${2 + Math.random() * 5}px;
+          --top: ${Math.random() * 100}%;
+          --left: ${Math.random() * 100}%;
+          --drift: ${-20 + Math.random() * 40}px;
+        `}
+      />
+    ))}
+  </div>
+</div>
+
+<style>
+  .side-bubbles-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .side-bubbles {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 120px;
+  }
+
+  .side-bubbles-left {
+    left: 0;
+  }
+
+  .side-bubbles-right {
+    right: 0;
+  }
+
+  .bubble {
+    position: absolute;
+    bottom: -20px;
+    left: var(--left);
+    width: var(--size);
+    height: var(--size);
+    background: radial-gradient(
+      circle at 30% 30%,
+      rgba(0, 206, 209, 0.2),
+      rgba(0, 206, 209, 0.08) 50%,
+      transparent 70%
+    );
+    border: 1px solid rgba(0, 206, 209, 0.12);
+    border-radius: 50%;
+    animation: rise-side var(--duration) var(--delay) infinite ease-out;
+    opacity: 0;
+  }
+
+  @keyframes rise-side {
+    0% {
+      transform: translateY(0) translateX(0) scale(0.8);
+      opacity: 0;
+    }
+    5% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.6;
+    }
+    95% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: translateY(-100vh) translateX(var(--drift)) scale(1);
+      opacity: 0;
+    }
+  }
+
+  /* Wider on larger screens */
+  @media (min-width: 1024px) {
+    .side-bubbles {
+      width: 180px;
+    }
+  }
+
+  @media (min-width: 1400px) {
+    .side-bubbles {
+      width: 250px;
+    }
+  }
+
+  /* Hide on very small screens */
+  @media (max-width: 640px) {
+    .side-bubbles {
+      width: 60px;
+    }
+
+    .bubble:nth-child(n+8) {
+      display: none;
+    }
+  }
+</style>

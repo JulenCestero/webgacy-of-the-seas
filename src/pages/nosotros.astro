@@ -2,18 +2,19 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import MemberCard from "../components/MemberCard.astro";
+import MemberModal from "../components/MemberModal.astro";
 
 // Get all members sorted by order
 const allMembers = await getCollection("members");
 const sortedMembers = allMembers.sort((a, b) => a.data.order - b.data.order);
 
 const influences = [
-  "Iron Maiden",
-  "Amon Amarth",
-  "Alestorm",
-  "Running Wild",
+  "Mago de Oz",
+  "Rhapsody of Fire",
+  "Nightwish",
+  "Blind Guardian",
   "Sabaton",
-  "Nightwish"
+  "Epica"
 ];
 ---
 
@@ -34,27 +35,28 @@ const influences = [
   <section class="py-16 bg-band-dark">
     <div class="container mx-auto px-4">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-2xl md:text-3xl font-metal text-band-gold mb-8 text-center">
+        <h2 class="text-2xl md:text-3xl font-metal text-band-sea mb-8 text-center">
           Nuestra Historia
         </h2>
 
         <div class="prose prose-invert prose-lg max-w-none">
           <p class="text-gray-300 leading-relaxed mb-6">
-            Legacy of the Seas es una banda de epic metal nacida en Donostia en 2010.
-            Con influencias folk, symphonic y power, nuestro sonido fusiona la potencia
-            del metal con composiciones de género fantástico y épico.
+            Legacy of the Seas es una banda de Metal Sinfónico con influencias Folk y Power
+            creada en 2010, tomando como referentes a bandas como Mago de Oz, Rhapsody of Fire
+            o Nightwish.
           </p>
 
           <p class="text-gray-300 leading-relaxed mb-6">
-            A lo largo de los años, diversas circunstancias de la vida han hecho que la
-            banda estuviese activa de forma intermitente: de 2010 a 2014, de 2016 a 2017
-            y desde 2020 hasta la actualidad. Cada etapa ha fortalecido nuestra música y
-            nuestra conexión con el público.
+            La senda de la banda se vio marcada por la pérdida de dos de sus jóvenes miembros,
+            ralentizando la salida a los escenarios. Sin embargo, estas pérdidas dieron forma
+            al espíritu de la banda, alimentando el deseo de hacer llegar su Legado a lo largo
+            y ancho de los siete mares.
           </p>
 
           <p class="text-gray-300 leading-relaxed">
-            En 2024 lanzamos nuestro primer álbum completo, "Leyendas de una Eternidad",
-            culminando más de una década de trabajo y pasión por el metal épico.
+            No es hasta 2023 que la banda completa su tripulación y publica su primer EP:
+            Eternidad. En 2024 lanza su primer álbum de estudio: "Leyendas de una Eternidad",
+            que está siendo presentado mediante una serie de conciertos por Euskadi y alrededores.
           </p>
         </div>
       </div>
@@ -64,11 +66,11 @@ const influences = [
   <!-- Members grid -->
   <section class="py-16 bg-band-dark-50">
     <div class="container mx-auto px-4">
-      <h2 class="text-2xl md:text-3xl font-metal text-band-gold mb-10 text-center">
+      <h2 class="text-2xl md:text-3xl font-metal text-band-sea mb-10 text-center">
         Los Miembros
       </h2>
 
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+      <div class="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto">
         {sortedMembers.map((member) => (
           <MemberCard
             name={member.data.name}
@@ -85,7 +87,7 @@ const influences = [
   <section class="py-16 bg-band-dark">
     <div class="container mx-auto px-4">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-2xl md:text-3xl font-metal text-band-gold mb-8">
+        <h2 class="text-2xl md:text-3xl font-metal text-band-sea mb-8">
           Influencias
         </h2>
 
@@ -95,7 +97,7 @@ const influences = [
 
         <div class="flex flex-wrap justify-center gap-4">
           {influences.map((band) => (
-            <span class="px-4 py-2 bg-band-dark-100 border border-band-gold/20 rounded-full text-gray-300 text-sm hover:border-band-gold/50 hover:text-band-gold transition-all">
+            <span class="px-4 py-2 bg-band-dark-100 border border-band-sea/20 rounded-full text-gray-300 text-sm hover:border-band-sea/50 hover:text-band-sea transition-all">
               {band}
             </span>
           ))}
@@ -107,7 +109,7 @@ const influences = [
   <!-- CTA -->
   <section class="py-16 bg-band-dark-50">
     <div class="container mx-auto px-4 text-center">
-      <h2 class="text-xl md:text-2xl font-metal text-band-gold mb-6">
+      <h2 class="text-xl md:text-2xl font-metal text-band-sea mb-6">
         ¿Quieres conocernos en persona?
       </h2>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -120,4 +122,6 @@ const influences = [
       </div>
     </div>
   </section>
+
+  <MemberModal />
 </BaseLayout>

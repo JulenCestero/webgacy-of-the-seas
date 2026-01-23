@@ -1,0 +1,125 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Lightbox from "../../components/Lightbox.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("archivo");
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+// Format date
+const formattedDate = new Date(post.data.date).toLocaleDateString("es-ES", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+---
+
+<BaseLayout title={post.data.title} description={post.data.excerpt || `${post.data.title} - Legacy of the Seas`}>
+  <article class="py-16 bg-band-dark">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto">
+        <!-- Back link -->
+        <a
+          href="/archivo"
+          class="inline-flex items-center gap-2 text-band-sea hover:text-band-gold transition-colors mb-8"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+          </svg>
+          Volver al archivo
+        </a>
+
+        <!-- Header -->
+        <header class="mb-8">
+          <!-- Date & Tags -->
+          <div class="flex items-center gap-3 mb-4">
+            <time class="text-band-sea">{formattedDate}</time>
+            {post.data.tags && post.data.tags.length > 0 && (
+              <span class="text-gray-600">•</span>
+              <div class="flex gap-2">
+                {post.data.tags.map((tag: string) => (
+                  <span class="text-xs text-gray-400 uppercase tracking-wider px-2 py-1 bg-band-dark-100 rounded">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <!-- Title -->
+          <h1 class="text-3xl md:text-5xl font-metal text-gradient mb-6">
+            {post.data.title}
+          </h1>
+
+          <!-- Excerpt -->
+          {post.data.excerpt && (
+            <p class="text-xl text-gray-300 leading-relaxed">
+              {post.data.excerpt}
+            </p>
+          )}
+        </header>
+
+        <!-- Featured image -->
+        {post.data.image && (
+          <div class="mb-10 rounded-lg overflow-hidden border border-band-sea/20">
+            <img
+              src={post.data.image}
+              alt={post.data.title}
+              class="w-full h-auto"
+            />
+          </div>
+        )}
+
+        <!-- Content -->
+        <div class="prose prose-lg max-w-none">
+          <Content />
+        </div>
+
+        <!-- Gallery -->
+        {post.data.gallery && post.data.gallery.length > 0 && (
+          <div class="mt-12">
+            <h2 class="text-2xl font-metal text-band-sea mb-6">Galería</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {post.data.gallery.map((img: string, index: number) => (
+                <a
+                  href={img}
+                  data-lightbox
+                  class="block aspect-square overflow-hidden rounded-lg border border-band-sea/20 hover:border-band-sea/50 transition-all cursor-pointer"
+                >
+                  <img
+                    src={img}
+                    alt={`Foto ${index + 1}`}
+                    class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Footer -->
+        <footer class="mt-12 pt-8 border-t border-band-sea/20">
+          <a
+            href="/archivo"
+            class="inline-flex items-center gap-2 text-band-sea hover:text-band-gold transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+            </svg>
+            Volver al archivo
+          </a>
+        </footer>
+      </div>
+    </div>
+  </article>
+  <Lightbox />
+</BaseLayout>

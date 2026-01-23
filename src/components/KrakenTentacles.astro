@@ -1,0 +1,138 @@
+---
+// Subtle kraken tentacles for the deep sea sections
+interface Props {
+  className?: string;
+}
+
+const { className = "" } = Astro.props;
+---
+
+<div class:list={["kraken-tentacles", className]}>
+  <!-- Left tentacle -->
+  <svg
+    class="tentacle tentacle-left"
+    viewBox="0 0 200 400"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M180 400 Q160 350 170 300 Q180 250 150 200 Q120 150 140 100 Q160 50 130 20 Q110 0 100 -20"
+      stroke="currentColor"
+      stroke-width="8"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <path
+      d="M160 400 Q140 360 155 320 Q170 280 140 240 Q110 200 130 160 Q150 120 120 80"
+      stroke="currentColor"
+      stroke-width="6"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <path
+      d="M140 400 Q125 370 135 340 Q145 310 120 280 Q95 250 115 220"
+      stroke="currentColor"
+      stroke-width="4"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <!-- Suction cups hints -->
+    <circle cx="165" cy="330" r="4" fill="currentColor" opacity="0.3" />
+    <circle cx="155" cy="280" r="3" fill="currentColor" opacity="0.25" />
+    <circle cx="145" cy="230" r="3" fill="currentColor" opacity="0.2" />
+  </svg>
+
+  <!-- Right tentacle -->
+  <svg
+    class="tentacle tentacle-right"
+    viewBox="0 0 200 400"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M20 400 Q40 350 30 300 Q20 250 50 200 Q80 150 60 100 Q40 50 70 20 Q90 0 100 -20"
+      stroke="currentColor"
+      stroke-width="8"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <path
+      d="M40 400 Q60 360 45 320 Q30 280 60 240 Q90 200 70 160 Q50 120 80 80"
+      stroke="currentColor"
+      stroke-width="6"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <path
+      d="M60 400 Q75 370 65 340 Q55 310 80 280 Q105 250 85 220"
+      stroke="currentColor"
+      stroke-width="4"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <!-- Suction cups hints -->
+    <circle cx="35" cy="330" r="4" fill="currentColor" opacity="0.3" />
+    <circle cx="45" cy="280" r="3" fill="currentColor" opacity="0.25" />
+    <circle cx="55" cy="230" r="3" fill="currentColor" opacity="0.2" />
+  </svg>
+</div>
+
+<style>
+  .kraken-tentacles {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    pointer-events: none;
+    overflow: hidden;
+    color: rgba(0, 206, 209, 0.08);
+  }
+
+  .tentacle {
+    position: absolute;
+    bottom: -50px;
+    height: 350px;
+    width: auto;
+  }
+
+  .tentacle-left {
+    left: -20px;
+    transform: rotate(-5deg);
+  }
+
+  .tentacle-right {
+    right: -20px;
+    transform: rotate(5deg);
+  }
+
+  @media (min-width: 768px) {
+    .kraken-tentacles {
+      height: 400px;
+      color: rgba(0, 206, 209, 0.06);
+    }
+
+    .tentacle {
+      height: 450px;
+      bottom: -80px;
+    }
+
+    .tentacle-left {
+      left: 5%;
+    }
+
+    .tentacle-right {
+      right: 5%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .tentacle-left {
+      left: 10%;
+    }
+
+    .tentacle-right {
+      right: 10%;
+    }
+  }
+</style>

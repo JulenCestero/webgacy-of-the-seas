@@ -25,7 +25,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-band-red hover:bg-band-red-500 text-white font-semibold py-3 px-6 rounded transition-all duration-300 uppercase tracking-wider;
+    @apply bg-band-sea hover:bg-band-sea-600 text-band-dark font-semibold py-3 px-6 rounded transition-all duration-300 uppercase tracking-wider shadow-lg shadow-band-sea/20 hover:shadow-band-sea/40;
   }
 
   .btn-secondary {
@@ -33,6 +33,14 @@
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-band-red via-band-gold to-band-red bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-band-sea via-band-gold to-band-sea bg-clip-text text-transparent;
+  }
+
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-band-gold via-band-gold-300 to-band-gold bg-clip-text text-transparent;
+  }
+
+  .glow-sea {
+    text-shadow: 0 0 20px rgba(0, 206, 209, 0.5), 0 0 40px rgba(0, 206, 209, 0.3);
   }
 }

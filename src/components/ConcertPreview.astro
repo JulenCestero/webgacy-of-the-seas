@@ -39,14 +39,14 @@ const upcomingConcerts = [
     <!-- Concert cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
       {upcomingConcerts.map((concert) => (
-        <article class="bg-band-dark border border-band-gold/20 rounded-lg p-6 hover:border-band-gold/50 transition-all group">
+        <article class="bg-band-dark border border-band-sea/20 rounded-lg p-6 hover:border-band-sea/50 transition-all group">
           <!-- Date -->
-          <div class="text-band-gold font-metal text-sm uppercase tracking-wider mb-3">
+          <div class="text-band-sea font-metal text-sm uppercase tracking-wider mb-3">
             {concert.date}
           </div>
 
           <!-- Venue -->
-          <h3 class="text-xl font-semibold text-white mb-1 group-hover:text-band-gold transition-colors">
+          <h3 class="text-xl font-semibold text-white mb-1 group-hover:text-band-sea transition-colors">
             {concert.venue}
           </h3>
 
@@ -58,7 +58,7 @@ const upcomingConcerts = [
           <!-- Ticket link -->
           <a
             href={concert.ticketUrl}
-            class="inline-flex items-center gap-2 text-sm text-band-red hover:text-band-gold transition-colors font-semibold uppercase tracking-wider"
+            class="inline-flex items-center gap-2 text-sm text-band-sea hover:text-band-gold transition-colors font-semibold uppercase tracking-wider"
           >
             Entradas
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

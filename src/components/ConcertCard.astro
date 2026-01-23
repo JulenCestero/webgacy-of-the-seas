@@ -22,11 +22,11 @@ const dayNumber = date.getDate();
 const monthName = date.toLocaleDateString("es-ES", { month: "short" }).toUpperCase();
 ---
 
-<article class={`bg-band-dark border rounded-lg overflow-hidden transition-all group ${isPast ? 'border-gray-700 opacity-60' : 'border-band-gold/20 hover:border-band-gold/50'}`}>
+<article class={`bg-band-dark border rounded-lg overflow-hidden transition-all group ${isPast ? 'border-gray-700 opacity-60' : 'border-band-sea/20 hover:border-band-sea/50'}`}>
   <div class="flex flex-col sm:flex-row">
     <!-- Date block -->
     <div class={`flex-shrink-0 p-6 flex flex-col items-center justify-center sm:w-28 ${isPast ? 'bg-gray-800' : 'bg-band-dark-100'}`}>
-      <span class={`text-3xl font-bold ${isPast ? 'text-gray-500' : 'text-band-gold'}`}>
+      <span class={`text-3xl font-bold ${isPast ? 'text-gray-500' : 'text-band-sea'}`}>
         {dayNumber}
       </span>
       <span class={`text-sm uppercase tracking-wider ${isPast ? 'text-gray-600' : 'text-gray-400'}`}>
@@ -41,7 +41,7 @@ const monthName = date.toLocaleDateString("es-ES", { month: "short" }).toUpperCa
     <div class="flex-1 p-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h3 class={`text-lg font-semibold mb-1 ${isPast ? 'text-gray-400' : 'text-white group-hover:text-band-gold'} transition-colors`}>
+          <h3 class={`text-lg font-semibold mb-1 ${isPast ? 'text-gray-400' : 'text-white group-hover:text-band-sea'} transition-colors`}>
             {venue}
           </h3>
           <p class={`${isPast ? 'text-gray-600' : 'text-gray-400'}`}>

@@ -1,0 +1,105 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+// Get all posts sorted by date (newest first)
+const allPosts = await getCollection("archivo");
+const sortedPosts = allPosts.sort((a, b) =>
+  new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+// Format date helper
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+---
+
+<BaseLayout title="Archivo" description="Historia, relatos y memorias de Legacy of the Seas. Fotos de conciertos, anécdotas y todo lo que hemos vivido.">
+  <!-- Hero section -->
+  <section class="py-20 bg-band-dark-50">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-6xl font-metal text-gradient mb-6">
+        Archivo
+      </h1>
+      <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+        Historias, memorias y relatos de nuestro viaje por los siete mares.
+      </p>
+    </div>
+  </section>
+
+  <!-- Posts grid -->
+  <section class="py-16 bg-band-dark">
+    <div class="container mx-auto px-4">
+      {sortedPosts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {sortedPosts.map((post) => (
+            <article class="group bg-band-dark-100 border border-band-sea/20 rounded-lg overflow-hidden hover:border-band-sea/50 transition-all">
+              <!-- Image -->
+              {post.data.image && (
+                <a href={`/archivo/${post.id}`} class="block aspect-video overflow-hidden">
+                  <img
+                    src={post.data.image}
+                    alt={post.data.title}
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </a>
+              )}
+
+              <!-- Content -->
+              <div class="p-6">
+                <!-- Date & Tags -->
+                <div class="flex items-center gap-3 mb-3">
+                  <time class="text-sm text-band-sea">
+                    {formatDate(new Date(post.data.date))}
+                  </time>
+                  {post.data.tags && post.data.tags.length > 0 && (
+                    <span class="text-gray-600">•</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-wider">
+                      {post.data.tags[0]}
+                    </span>
+                  )}
+                </div>
+
+                <!-- Title -->
+                <h2 class="text-xl font-metal text-white mb-3 group-hover:text-band-sea transition-colors">
+                  <a href={`/archivo/${post.id}`}>
+                    {post.data.title}
+                  </a>
+                </h2>
+
+                <!-- Excerpt -->
+                {post.data.excerpt && (
+                  <p class="text-gray-400 text-sm line-clamp-3 mb-4">
+                    {post.data.excerpt}
+                  </p>
+                )}
+
+                <!-- Read more -->
+                <a
+                  href={`/archivo/${post.id}`}
+                  class="inline-flex items-center gap-2 text-sm text-band-sea hover:text-band-gold transition-colors font-medium"
+                >
+                  Leer más
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <p class="text-gray-400 text-lg">
+            Próximamente compartiremos nuestras historias aquí.
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

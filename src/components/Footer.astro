@@ -7,20 +7,22 @@ const footerLinks = [
   { href: "/", label: "Home" },
   { href: "/conciertos", label: "Conciertos" },
   { href: "/nosotros", label: "Nosotros" },
+  { href: "/archivo", label: "Archivo" },
   { href: "/contacto", label: "Contacto" },
 ];
 ---
 
-<footer class="bg-band-dark-100 border-t border-band-gold/20 mt-auto">
+<footer class="bg-band-dark-100 border-t border-band-sea/20 mt-auto">
   <div class="container mx-auto px-4 py-12">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <!-- Logo y descripción -->
       <div class="space-y-4">
-        <a href="/" class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-band-red rounded-full flex items-center justify-center border-2 border-band-gold">
-            <span class="font-metal text-band-gold text-lg font-bold">LS</span>
-          </div>
-          <span class="font-metal text-lg text-band-gold">Legacy of the Seas</span>
+        <a href="/" class="inline-block">
+          <img
+            src="/images/logo/logo-horizontal.png"
+            alt="Legacy of the Seas"
+            class="h-10 w-auto object-contain hover:brightness-125 transition-all"
+          />
         </a>
         <p class="text-gray-400 text-sm">
           Navegando las aguas del metal desde tiempos inmemoriales.
@@ -29,7 +31,7 @@ const footerLinks = [
 
       <!-- Links de navegación -->
       <div>
-        <h3 class="font-metal text-band-gold text-sm uppercase tracking-wider mb-4">
+        <h3 class="font-metal text-band-sea text-sm uppercase tracking-wider mb-4">
           Navegación
         </h3>
         <ul class="space-y-2">
@@ -37,7 +39,7 @@ const footerLinks = [
             <li>
               <a
                 href={link.href}
-                class="text-gray-400 hover:text-band-gold text-sm transition-colors"
+                class="text-gray-400 hover:text-band-sea text-sm transition-colors"
               >
                 {link.label}
               </a>
@@ -48,7 +50,7 @@ const footerLinks = [
 
       <!-- Redes sociales -->
       <div>
-        <h3 class="font-metal text-band-gold text-sm uppercase tracking-wider mb-4">
+        <h3 class="font-metal text-band-sea text-sm uppercase tracking-wider mb-4">
           Síguenos
         </h3>
         <SocialLinks size="md" />
@@ -56,7 +58,7 @@ const footerLinks = [
     </div>
 
     <!-- Copyright -->
-    <div class="border-t border-band-gold/10 mt-8 pt-8 text-center">
+    <div class="border-t border-band-sea/10 mt-8 pt-8 text-center">
       <p class="text-gray-500 text-sm">
         &copy; {currentYear} Legacy of the Seas. Todos los derechos reservados.
       </p>

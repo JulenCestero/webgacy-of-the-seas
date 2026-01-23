@@ -1,0 +1,258 @@
+---
+// Modal component for member profiles
+---
+
+<!-- Member Modal -->
+<div id="member-modal" class="member-modal" aria-hidden="true">
+  <div class="modal-overlay"></div>
+  <div class="modal-content">
+    <!-- Close button -->
+    <button class="modal-close" aria-label="Cerrar">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <div class="modal-body">
+      <!-- Member image -->
+      <div class="modal-image-container">
+        <img class="modal-image" src="" alt="" />
+      </div>
+
+      <!-- Member info -->
+      <div class="modal-info">
+        <h2 class="modal-name"></h2>
+        <p class="modal-role"></p>
+        <div class="modal-bio"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .member-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .member-modal.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+  }
+
+  .modal-content {
+    position: relative;
+    background: #151515;
+    border: 1px solid rgba(0, 206, 209, 0.3);
+    border-radius: 1rem;
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    color: #9ca3af;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.2s ease;
+    z-index: 10;
+  }
+
+  .modal-close:hover {
+    color: #00CED1;
+  }
+
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (min-width: 640px) {
+    .modal-body {
+      flex-direction: row;
+    }
+  }
+
+  .modal-image-container {
+    flex-shrink: 0;
+    width: 100%;
+    aspect-ratio: 3/4;
+    max-height: 300px;
+    overflow: hidden;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  @media (min-width: 640px) {
+    .modal-image-container {
+      width: 250px;
+      max-height: none;
+      border-radius: 1rem 0 0 1rem;
+    }
+  }
+
+  .modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+
+  .modal-info {
+    padding: 1.5rem;
+    flex: 1;
+  }
+
+  @media (min-width: 640px) {
+    .modal-info {
+      padding: 2rem;
+    }
+  }
+
+  .modal-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.75rem;
+    color: #00CED1;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .modal-role {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 206, 209, 0.2);
+  }
+
+  .modal-bio {
+    color: #d1d5db;
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+
+  .modal-bio :global(p) {
+    margin-bottom: 1rem;
+  }
+
+  .modal-bio :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* Placeholder when no image */
+  .modal-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-image-placeholder svg {
+    width: 5rem;
+    height: 5rem;
+    color: rgba(0, 206, 209, 0.3);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('member-modal');
+    if (!modal) return;
+
+    const overlay = modal.querySelector('.modal-overlay');
+    const closeBtn = modal.querySelector('.modal-close');
+    const imageEl = modal.querySelector('.modal-image') as HTMLImageElement;
+    const imageContainer = modal.querySelector('.modal-image-container');
+    const nameEl = modal.querySelector('.modal-name');
+    const roleEl = modal.querySelector('.modal-role');
+    const bioEl = modal.querySelector('.modal-bio');
+
+    // Open modal with member data
+    function openMemberModal(data: { name: string; role: string; image?: string; bio?: string }) {
+      if (nameEl) nameEl.textContent = data.name;
+      if (roleEl) roleEl.textContent = data.role;
+      if (bioEl) bioEl.innerHTML = data.bio || '';
+
+      if (imageContainer && imageEl) {
+        if (data.image) {
+          imageEl.src = data.image;
+          imageEl.alt = data.name;
+          imageEl.style.display = 'block';
+        } else {
+          // Show placeholder
+          imageEl.style.display = 'none';
+          const placeholder = document.createElement('div');
+          placeholder.className = 'modal-image-placeholder';
+          placeholder.innerHTML = `<svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+          imageContainer.appendChild(placeholder);
+        }
+      }
+
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Close modal
+    function closeMemberModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+
+      // Clean up placeholder if exists
+      const placeholder = modal.querySelector('.modal-image-placeholder');
+      if (placeholder) placeholder.remove();
+      if (imageEl) imageEl.style.display = 'block';
+    }
+
+    // Event listeners
+    closeBtn?.addEventListener('click', closeMemberModal);
+    overlay?.addEventListener('click', closeMemberModal);
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (!modal.classList.contains('active')) return;
+      if (e.key === 'Escape') closeMemberModal();
+    });
+
+    // Expose globally
+    (window as any).openMemberModal = openMemberModal;
+
+    // Auto-attach to member cards
+    const memberCards = document.querySelectorAll('[data-member]');
+    memberCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const data = {
+          name: card.getAttribute('data-member-name') || '',
+          role: card.getAttribute('data-member-role') || '',
+          image: card.getAttribute('data-member-image') || '',
+          bio: card.getAttribute('data-member-bio') || '',
+        };
+        openMemberModal(data);
+      });
+    });
+  });
+</script>

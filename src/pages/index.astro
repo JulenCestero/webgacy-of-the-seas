@@ -4,16 +4,21 @@ import Hero from "../components/Hero.astro";
 import ConcertPreview from "../components/ConcertPreview.astro";
 import SpotifyEmbed from "../components/SpotifyEmbed.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
+import WaveDivider from "../components/WaveDivider.astro";
+import KrakenTentacles from "../components/KrakenTentacles.astro";
 
-// Placeholder Spotify URI - replace with actual band album/playlist
-const spotifyUri = "spotify:album:4LH4d3cOWNNsVw41Gqt2kv"; // Example: Iron Maiden album
+// Album: Leyendas de una Eternidad (2024)
+const spotifyUri = "spotify:album:2f2fEmQkP6dBwOTNs47so9";
 ---
 
 <BaseLayout title="Inicio" description="Legacy of the Seas - Banda de Metal desde las profundidades del océano. Música épica, letras inmersivas y un sonido que te transportará.">
-  <Hero />
+  <Hero logoSrc="/images/logo/logo-ls.png" />
 
-  <!-- Spotify section -->
-  <section id="spotify" class="py-16 bg-band-dark">
+  <!-- Wave transition from hero -->
+  <WaveDivider color="#091418" />
+
+  <!-- Spotify section - Shallow waters -->
+  <section id="spotify" class="py-16 bg-depth-shallow">
     <div class="container mx-auto px-4">
       <div class="max-w-3xl mx-auto text-center">
         <h2 class="text-3xl md:text-4xl font-metal text-gradient mb-6">
@@ -29,19 +34,33 @@ const spotifyUri = "spotify:album:4LH4d3cOWNNsVw41Gqt2kv"; // Example: Iron Maid
     </div>
   </section>
 
-  <ConcertPreview />
+  <!-- Wave transition -->
+  <WaveDivider color="#071216" />
 
-  <!-- About teaser -->
-  <section class="py-20 bg-band-dark">
-    <div class="container mx-auto px-4">
+  <!-- Concerts section - Mid depth -->
+  <div class="bg-depth-mid">
+    <ConcertPreview />
+  </div>
+
+  <!-- Wave transition -->
+  <WaveDivider color="#050f14" />
+
+  <!-- About teaser - Deep waters -->
+  <section class="py-20 bg-depth-deep relative overflow-hidden">
+    <!-- Subtle glow effect -->
+    <div class="absolute inset-0 opacity-30">
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-band-sea/5 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
       <div class="max-w-4xl mx-auto text-center">
         <h2 class="text-3xl md:text-4xl font-metal text-gradient mb-6">
           Sobre Nosotros
         </h2>
         <p class="text-lg text-gray-300 mb-8 leading-relaxed">
-          Legacy of the Seas nació de las profundidades del océano, donde las leyendas marinas
-          se encuentran con el poder del metal. Cinco músicos unidos por la pasión de crear
-          un sonido épico que transporta a tierras inexploradas.
+          Legacy of the Seas somos una banda de Metal Sinfónico con influencias Folk y Power
+          creada en 2010. Cinco músicos unidos por la pasión de hacer llegar nuestro Legado
+          a lo largo y ancho de los siete mares.
         </p>
         <a href="/nosotros" class="btn-secondary inline-flex items-center gap-2">
           Conoce a la tripulación
@@ -53,9 +72,21 @@ const spotifyUri = "spotify:album:4LH4d3cOWNNsVw41Gqt2kv"; // Example: Iron Maid
     </div>
   </section>
 
-  <!-- Newsletter -->
-  <section class="py-16 bg-band-dark-50">
-    <div class="container mx-auto px-4">
+  <!-- Wave transition -->
+  <WaveDivider color="#030a10" />
+
+  <!-- Newsletter - The Abyss -->
+  <section class="py-16 pb-24 bg-depth-abyss relative overflow-hidden">
+    <!-- Deep sea ambient glow -->
+    <div class="absolute inset-0 opacity-20">
+      <div class="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-band-sea/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-band-sea/5 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Kraken tentacles emerging from the depths -->
+    <KrakenTentacles />
+
+    <div class="container mx-auto px-4 relative z-10">
       <div class="max-w-xl mx-auto">
         <NewsletterSignup />
       </div>

@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ConcertCard from "../components/ConcertCard.astro";
+import SocialLinks from "../components/SocialLinks.astro";
 
 // Get all concerts and sort by date
 const allConcerts = await getCollection("concerts");
@@ -51,11 +52,12 @@ const pastConcerts = sortedConcerts.filter(c => new Date(c.data.date) < now).rev
         </div>
       ) : (
         <div class="bg-band-dark-100 border border-band-gold/20 rounded-lg p-8 text-center max-w-2xl">
-          <p class="text-gray-400">
+          <p class="text-gray-400 mb-6">
             No hay conciertos programados por el momento.
             <br />
             ¡Síguenos en redes para estar al tanto de las novedades!
           </p>
+          <SocialLinks size="md" className="justify-center" />
         </div>
       )}
     </div>

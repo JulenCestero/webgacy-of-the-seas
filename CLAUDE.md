@@ -2,28 +2,85 @@
 
 ## Estado Actual
 
-**Última actualización**: 2026-01-22 21:20
+**Última actualización**: 2026-01-23 08:58
+
+### Epics Completados
+- [x] **SETUP** (legacy-381) - Fundación del Proyecto
+- [x] **PAGES** (legacy-pni) - Páginas Core del MVP
+- [x] **INTEGRATIONS** (legacy-gcq) - Integraciones Externas
+- [x] **CMS** (legacy-ebo) - Gestión de Contenido
+- [x] **LAUNCH** (legacy-iep) - SEO y Despliegue
 
 ### Issues Completadas
 - [x] `legacy-u52` - Inicializar proyecto Astro
 - [x] `legacy-a16` - Configurar Tailwind CSS dark mode
 - [x] `legacy-91i` - Crear BaseLayout con estructura HTML
 - [x] `legacy-wv0` - Crear componentes comunes Header/Footer
+- [x] `legacy-y2i` - Página Home con Hero
+- [x] `legacy-7b7` - Página de Conciertos
+- [x] `legacy-66t` - Página Nosotros (About)
+- [x] `legacy-8rn` - Página de Contacto
+- [x] `legacy-79s` - Embed de Spotify
+- [x] `legacy-6f2` - Links redes sociales
+- [x] `legacy-06q` - Newsletter signup Mailchimp
+- [x] `legacy-768` - Formulario contacto Netlify Forms
+- [x] `legacy-cfj` - Configurar Decap CMS
+- [x] `legacy-5p1` - Colección Miembros en CMS
+- [x] `legacy-avu` - Colección Conciertos en CMS
+- [x] `legacy-n45` - Optimización SEO
+- [x] `legacy-s97` - Optimización imágenes
+- [x] `legacy-t6k` - Deploy a Netlify
+- [x] `legacy-jep` - Documentación usuario CMS
+- [x] `legacy-bga` - Testing final QA
 
-### Epic SETUP (legacy-381) - COMPLETADO
-Todas las tareas del epic SETUP han sido completadas.
+### Issue Pendiente (Final)
+- [ ] `legacy-fin` - Adaptar placeholders e imágenes reales
 
-### Siguiente Issue
-- [ ] `legacy-y2i` - Página Home con Hero (priority 1)
+---
+
+## Estructura del Proyecto
+
+```
+src/
+├── components/
+│   ├── Header.astro         ✓
+│   ├── Footer.astro         ✓
+│   ├── Hero.astro           ✓
+│   ├── ConcertPreview.astro ✓
+│   ├── ConcertCard.astro    ✓
+│   ├── MemberCard.astro     ✓
+│   ├── SpotifyEmbed.astro   ✓
+│   ├── SocialLinks.astro    ✓
+│   └── NewsletterSignup.astro ✓
+├── content/
+│   ├── members/             ✓ (5 miembros)
+│   ├── concerts/            ✓ (4 conciertos)
+│   └── settings/            ✓ (general.json, social.json)
+├── layouts/
+│   └── BaseLayout.astro     ✓
+├── pages/
+│   ├── index.astro          ✓
+│   ├── conciertos.astro     ✓
+│   ├── nosotros.astro       ✓
+│   └── contacto.astro       ✓
+└── styles/
+    └── global.css           ✓
+
+public/
+├── admin/
+│   ├── index.html           ✓ (Decap CMS)
+│   └── config.yml           ✓
+└── uploads/                 ✓ (para imágenes CMS)
+
+docs/
+└── cms-guide.md             ✓
+
+netlify.toml                 ✓
+```
 
 ---
 
 ## Procedimiento para Cada Issue
-
-### Comando para Continuar
-```bash
-bd ready && bd show legacy-y2i
-```
 
 ### Flujo de Trabajo por Issue
 
@@ -36,67 +93,24 @@ bd update <issue-id> --status=in_progress
 # ... escribir código ...
 
 # 3. Verificar que funciona
-export PATH="$PATH:/c/Program Files/nodejs"
 npm run build
 
-# 4. Documentar cambios en docs/setup.md si aplica
-
-# 5. Commit
+# 4. Commit
 git add <archivos>
 git commit -m "feat: descripción
 
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 
-# 6. Cerrar issue
-bd close <issue-id> --reason="Descripción de lo completado"
+# 5. Cerrar issue
+# Editar .beads/issues.jsonl
+# Cambiar status a "closed", añadir closed_at y close_reason
 
-# 7. Actualizar CLAUDE.md con progreso
-```
-
----
-
-## Detalles de Issue Pendiente: legacy-y2i
-
-**Título**: Página Home con Hero
-
-**Descripción**: Landing page con hero visual, título banda, CTAs (Escuchar, Próximo Concierto), preview conciertos
-
-**Archivos a modificar/crear**:
-- `src/pages/index.astro` - Hero section con título, descripción y CTAs
-- Posiblemente componente Hero.astro separado
-
-**Dependencias**:
-- Bloqueada por: `legacy-wv0` ✅ (completada)
-
----
-
-## Estructura del Proyecto
-
-```
-src/
-├── components/
-│   ├── Header.astro    ✓
-│   └── Footer.astro    ✓
-├── content/
-│   ├── members/        # Colección miembros
-│   └── concerts/       # Colección conciertos
-├── layouts/
-│   └── BaseLayout.astro ✓
-├── pages/
-│   └── index.astro ✓
-└── styles/
-    └── global.css ✓
+# 6. Actualizar CLAUDE.md con progreso
 ```
 
 ---
 
 ## Notas Técnicas
-
-### PATH de Node.js
-En bash de Claude Code, usar:
-```bash
-export PATH="$PATH:/c/Program Files/nodejs"
-```
 
 ### Commits
 Siempre incluir co-author:
@@ -109,36 +123,14 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 - `band-red`: #8b0000 (acentos)
 - `band-gold`: #d4af37 (detalles)
 
----
+### Deploy
+El proyecto está configurado para Netlify:
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Netlify Identity habilitado para CMS
 
-## Proceso de Validación por Issue (OBLIGATORIO)
-
-### Flujo de Cierre de Issue
-**SIEMPRE seguir estos 4 pasos en orden:**
-
-1. **VALIDACIÓN**
-   - Ejecutar `npm run build` para verificar que compila
-   - Ejecutar `npm run dev` y abrir en navegador
-   - Tomar screenshot con Playwright → guardar en `validations/`
-
-2. **COMMIT**
-   - `git add <archivos específicos>`
-   - `git commit -m "feat: descripción\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"`
-
-3. **CERRAR BEAD**
-   - Editar `.beads/issues.jsonl` directamente
-   - Cambiar `"status":"open"` → `"status":"closed"`
-   - Añadir `"closed_at"` y `"close_reason"`
-   - Actualizar CLAUDE.md con progreso
-
-4. **LIMPIAR CONTEXTO**
-   - Compactar si el contexto es muy largo
-   - Usar `/compact` si es necesario
-
-### Carpeta de Validaciones
-```
-validations/
-├── legacy-wv0-header-footer.png
-├── legacy-xxx-feature.png
-└── ...
-```
+### CMS
+Acceso: `/admin/`
+- Gestión de miembros y conciertos
+- Configuración general y redes sociales
+- Documentación en `docs/cms-guide.md`

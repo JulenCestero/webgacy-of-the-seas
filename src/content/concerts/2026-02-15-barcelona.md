@@ -2,7 +2,7 @@
 title: Legacy of the Seas en Placeholder 2
 date: 2026-02-15
 venue: Sala Apolo
-city: Barcelona
+city: Placeholder
 ticketUrl: https://tickets.example.com/barcelona
 isSoldOut: false
 ---

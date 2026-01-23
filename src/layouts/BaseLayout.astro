@@ -45,6 +45,26 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Schema.org MusicGroup -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "MusicGroup",
+      "name": "Legacy of the Seas",
+      "description": "Banda de Metal épico con temática náutica",
+      "url": Astro.site?.toString(),
+      "genre": ["Heavy Metal", "Epic Metal"],
+      "foundingLocation": {
+        "@type": "Place",
+        "name": "España"
+      },
+      "sameAs": [
+        "https://instagram.com/legacyoftheseas",
+        "https://facebook.com/legacyoftheseas",
+        "https://youtube.com/@legacyoftheseas",
+        "https://open.spotify.com/artist/legacyoftheseas"
+      ]
+    })} />
   </head>
   <body class="min-h-screen flex flex-col">
     <Header />

@@ -26,3 +26,9 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local config (not for repo)
+.claude/
+.playwright-mcp/
+.beads/
+validations/

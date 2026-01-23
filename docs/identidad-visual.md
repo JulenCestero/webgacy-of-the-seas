@@ -8,7 +8,7 @@
 | **Género** | Epic Metal (con influencias folk, symphonic y power) |
 | **Origen** | Donostia / Euskadi |
 | **Fundación** | 2010 |
-| **Email** | unforgottenlegacyband@gmail.com |
+| **Email** | legacy.of.the.seas@gmail.com |
 
 ## Historia
 

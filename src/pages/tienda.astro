@@ -1,11 +1,11 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import MerchCard from "../components/MerchCard.astro";
-import { getCollection } from "astro:content";
+import { db, merch } from "../lib/db";
+import { asc } from "drizzle-orm";
 
 // Get all merch items sorted by order
-const allMerch = await getCollection("merch");
-const sortedMerch = allMerch.sort((a, b) => (a.data.order || 99) - (b.data.order || 99));
+const sortedMerch = await db.select().from(merch).orderBy(asc(merch.order));
 ---
 
 <BaseLayout title="Tienda" description="Consigue el merchandising oficial de Legacy of the Seas. CDs, camisetas y más.">
@@ -28,11 +28,11 @@ const sortedMerch = allMerch.sort((a, b) => (a.data.order || 99) - (b.data.order
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {sortedMerch.map((item) => (
             <MerchCard
-              name={item.data.name}
-              description={item.data.description}
-              image={item.data.image}
-              price={item.data.price}
-              buyUrl={item.data.buyUrl}
+              name={item.name}
+              description={item.description}
+              image={item.image}
+              price={item.price}
+              buyUrl={item.buyUrl}
             />
           ))}
         </div>

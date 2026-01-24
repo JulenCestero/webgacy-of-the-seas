@@ -1,12 +1,12 @@
 ---
-import { getCollection } from "astro:content";
+import { db, members } from "../lib/db";
+import { asc } from "drizzle-orm";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import MemberCard from "../components/MemberCard.astro";
 import MemberModal from "../components/MemberModal.astro";
 
 // Get all members sorted by order
-const allMembers = await getCollection("members");
-const sortedMembers = allMembers.sort((a, b) => a.data.order - b.data.order);
+const sortedMembers = await db.select().from(members).orderBy(asc(members.order));
 
 const influences = [
   "Mago de Oz",
@@ -73,10 +73,10 @@ const influences = [
       <div class="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto">
         {sortedMembers.map((member) => (
           <MemberCard
-            name={member.data.name}
-            role={member.data.role}
-            image={member.data.image}
-            bio={member.body}
+            name={member.name}
+            role={member.role}
+            image={member.image}
+            bio={member.bio}
           />
         ))}
       </div>

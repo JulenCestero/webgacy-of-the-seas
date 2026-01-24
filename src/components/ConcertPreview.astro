@@ -1,27 +1,24 @@
 ---
 // Preview de próximos conciertos para la home
-// Datos de ejemplo hasta que se conecte con Content Collection
+import { db, concerts } from "../lib/db";
+import { asc, gte } from "drizzle-orm";
 
-const upcomingConcerts = [
-  {
-    date: "15 FEB 2026",
-    venue: "Sala Apolo",
-    city: "Barcelona",
-    ticketUrl: "#"
-  },
-  {
-    date: "22 FEB 2026",
-    venue: "La Riviera",
-    city: "Madrid",
-    ticketUrl: "#"
-  },
-  {
-    date: "01 MAR 2026",
-    venue: "Kafe Antzokia",
-    city: "Bilbao",
-    ticketUrl: "#"
-  }
-];
+// Get upcoming concerts (max 3) from database
+const now = new Date().toISOString().split('T')[0];
+const upcomingConcerts = await db.select().from(concerts)
+  .where(gte(concerts.date, now))
+  .orderBy(asc(concerts.date))
+  .limit(3);
+
+// Format date for display
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  }).toUpperCase();
+}
 ---
 
 <section class="py-20 bg-band-dark-50">
@@ -37,37 +34,55 @@ const upcomingConcerts = [
     </div>
 
     <!-- Concert cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-      {upcomingConcerts.map((concert) => (
-        <article class="bg-band-dark border border-band-sea/20 rounded-lg p-6 hover:border-band-sea/50 transition-all group">
-          <!-- Date -->
-          <div class="text-band-sea font-metal text-sm uppercase tracking-wider mb-3">
-            {concert.date}
-          </div>
+    {upcomingConcerts.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {upcomingConcerts.map((concert) => (
+          <article class="bg-band-dark border border-band-sea/20 rounded-lg p-6 hover:border-band-sea/50 transition-all group">
+            <!-- Date -->
+            <div class="text-band-sea font-metal text-sm uppercase tracking-wider mb-3">
+              {formatDate(concert.date)}
+            </div>
 
-          <!-- Venue -->
-          <h3 class="text-xl font-semibold text-white mb-1 group-hover:text-band-sea transition-colors">
-            {concert.venue}
-          </h3>
+            <!-- Venue -->
+            <h3 class="text-xl font-semibold text-white mb-1 group-hover:text-band-sea transition-colors">
+              {concert.venue}
+            </h3>
 
-          <!-- City -->
-          <p class="text-gray-400 mb-4">
-            {concert.city}
-          </p>
+            <!-- City -->
+            <p class="text-gray-400 mb-4">
+              {concert.city}
+            </p>
 
-          <!-- Ticket link -->
-          <a
-            href={concert.ticketUrl}
-            class="inline-flex items-center gap-2 text-sm text-band-sea hover:text-band-gold transition-colors font-semibold uppercase tracking-wider"
-          >
-            Entradas
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-            </svg>
-          </a>
-        </article>
-      ))}
-    </div>
+            <!-- Ticket link -->
+            {concert.ticketUrl && !concert.isSoldOut ? (
+              <a
+                href={concert.ticketUrl}
+                class="inline-flex items-center gap-2 text-sm text-band-sea hover:text-band-gold transition-colors font-semibold uppercase tracking-wider"
+              >
+                Entradas
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+              </a>
+            ) : concert.isSoldOut ? (
+              <span class="text-sm text-gray-500 font-semibold uppercase tracking-wider">
+                Agotado
+              </span>
+            ) : (
+              <span class="text-sm text-gray-500 font-semibold uppercase tracking-wider">
+                Próximamente
+              </span>
+            )}
+          </article>
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-8">
+        <p class="text-gray-400">
+          No hay conciertos programados por el momento. ¡Síguenos para estar al tanto!
+        </p>
+      </div>
+    )}
 
     <!-- CTA to all concerts -->
     <div class="text-center mt-10">

@@ -1,28 +1,47 @@
 ---
-import { getCollection, render } from "astro:content";
+import { db, posts } from "../../lib/db";
+import { eq } from "drizzle-orm";
+import { marked } from "marked";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Lightbox from "../../components/Lightbox.astro";
 
-export async function getStaticPaths() {
-  const posts = await getCollection("archivo");
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
-  }));
+// Get slug from URL params
+const { slug } = Astro.params;
+
+// Fetch post from database
+const result = await db.select().from(posts).where(eq(posts.slug, slug!)).limit(1);
+const post = result[0];
+
+// 404 if not found
+if (!post) {
+  return Astro.redirect("/404");
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
+// Parse JSON arrays
+function parseJsonArray(str: string | null): string[] {
+  if (!str) return [];
+  try {
+    return JSON.parse(str);
+  } catch {
+    return [];
+  }
+}
+
+const tags = parseJsonArray(post.tags);
+const gallery = parseJsonArray(post.gallery);
+
+// Render markdown content
+const htmlContent = post.body ? marked(post.body) : "";
 
 // Format date
-const formattedDate = new Date(post.data.date).toLocaleDateString("es-ES", {
+const formattedDate = new Date(post.date).toLocaleDateString("es-ES", {
   day: "numeric",
   month: "long",
   year: "numeric",
 });
 ---
 
-<BaseLayout title={post.data.title} description={post.data.excerpt || `${post.data.title} - Legacy of the Seas`}>
+<BaseLayout title={post.title} description={post.excerpt || `${post.title} - Legacy of the Seas`}>
   <article class="py-16 bg-band-dark">
     <div class="container mx-auto px-4">
       <div class="max-w-3xl mx-auto">
@@ -42,10 +61,10 @@ const formattedDate = new Date(post.data.date).toLocaleDateString("es-ES", {
           <!-- Date & Tags -->
           <div class="flex items-center gap-3 mb-4">
             <time class="text-band-sea">{formattedDate}</time>
-            {post.data.tags && post.data.tags.length > 0 && (
+            {tags.length > 0 && (
               <span class="text-gray-600">•</span>
               <div class="flex gap-2">
-                {post.data.tags.map((tag: string) => (
+                {tags.map((tag: string) => (
                   <span class="text-xs text-gray-400 uppercase tracking-wider px-2 py-1 bg-band-dark-100 rounded">
                     {tag}
                   </span>
@@ -56,39 +75,37 @@ const formattedDate = new Date(post.data.date).toLocaleDateString("es-ES", {
 
           <!-- Title -->
           <h1 class="text-3xl md:text-5xl font-metal text-gradient mb-6">
-            {post.data.title}
+            {post.title}
           </h1>
 
           <!-- Excerpt -->
-          {post.data.excerpt && (
+          {post.excerpt && (
             <p class="text-xl text-gray-300 leading-relaxed">
-              {post.data.excerpt}
+              {post.excerpt}
             </p>
           )}
         </header>
 
         <!-- Featured image -->
-        {post.data.image && (
+        {post.image && (
           <div class="mb-10 rounded-lg overflow-hidden border border-band-sea/20">
             <img
-              src={post.data.image}
-              alt={post.data.title}
+              src={post.image}
+              alt={post.title}
               class="w-full h-auto"
             />
           </div>
         )}
 
         <!-- Content -->
-        <div class="prose prose-lg max-w-none">
-          <Content />
-        </div>
+        <div class="prose prose-lg max-w-none" set:html={htmlContent} />
 
         <!-- Gallery -->
-        {post.data.gallery && post.data.gallery.length > 0 && (
+        {gallery.length > 0 && (
           <div class="mt-12">
             <h2 class="text-2xl font-metal text-band-sea mb-6">Galería</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {post.data.gallery.map((img: string, index: number) => (
+              {gallery.map((img: string, index: number) => (
                 <a
                   href={img}
                   data-lightbox

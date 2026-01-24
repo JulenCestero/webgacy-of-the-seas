@@ -1,0 +1,259 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { db, members } from "../../../lib/db";
+
+let error = "";
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+
+    const id = crypto.randomUUID();
+    const name = formData.get("name") as string;
+    const role = formData.get("role") as string;
+    const image = formData.get("image") as string || null;
+    const order = parseInt(formData.get("order") as string) || 0;
+    const bio = formData.get("bio") as string || null;
+
+    if (!name || !role) {
+      error = "Por favor, completa nombre y rol";
+    } else {
+      await db.insert(members).values({
+        id, name, role, image, order, bio,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return Astro.redirect("/admin/miembros?created=1");
+    }
+  } catch (e) {
+    error = "Error al crear el miembro: " + (e as Error).message;
+  }
+}
+---
+
+<AdminLayout title="Nuevo miembro">
+  <a href="/admin/miembros" class="back-link">
+    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Volver a miembros
+  </a>
+
+  <div class="admin-header">
+    <h1 class="admin-title">Nuevo miembro</h1>
+    <p class="admin-subtitle">Añade un nuevo miembro a la banda</p>
+  </div>
+
+  {error && <div class="alert alert-error">{error}</div>}
+
+  <form method="POST" style="max-width: 700px;">
+    <!-- Información básica -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <h3>Información del miembro</h3>
+      </div>
+      <div class="form-section-content">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="name">Nombre <span class="required">*</span></label>
+            <input type="text" id="name" name="name" required placeholder="Nombre completo" />
+          </div>
+          <div class="form-field">
+            <label for="role">Rol <span class="required">*</span></label>
+            <input type="text" id="role" name="role" required placeholder="Voz, Guitarra, Bajo..." />
+          </div>
+        </div>
+
+        <div class="form-field" style="max-width: 150px;">
+          <label for="order">Orden de aparición</label>
+          <input type="number" id="order" name="order" value="0" min="0" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Foto del miembro -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h3>Foto del miembro</h3>
+      </div>
+      <div class="form-section-content">
+        <input type="hidden" id="image" name="image" value="" />
+        <div class="image-upload-container">
+          <div class="image-preview-wrapper">
+            <div id="imagePreview" class="image-placeholder" style="width: 150px; height: 150px;">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>Sin foto</span>
+            </div>
+          </div>
+          <div class="image-upload-actions">
+            <label class="btn btn-secondary" style="cursor: pointer;">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span id="uploadBtnText">Subir foto</span>
+              <input type="file" id="imageFile" accept="image/*" style="display: none;" />
+            </label>
+            <button type="button" id="removeImage" class="btn btn-danger btn-sm" style="display: none;">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Eliminar
+            </button>
+          </div>
+          <p id="uploadStatus" class="upload-status"></p>
+          <small class="form-hint">Formatos: JPG, PNG, WebP. Tamaño recomendado: 400x400px</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Biografía -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        <h3>Biografía</h3>
+        <span class="badge badge-info" style="margin-left: auto;">Markdown</span>
+      </div>
+      <div class="form-section-content">
+        <div class="form-field">
+          <label for="bio">Biografía del miembro</label>
+          <textarea id="bio" name="bio" rows="8" placeholder="Escribe la biografía del miembro en Markdown..."></textarea>
+          <small class="form-hint">Puedes usar Markdown: **negrita**, *cursiva*, [enlaces](url), etc.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Crear miembro
+      </button>
+      <a href="/admin/miembros" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</AdminLayout>
+
+<style>
+  .image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .image-preview {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    border: 2px solid var(--admin-border);
+  }
+
+  .image-placeholder {
+    border-radius: 0.5rem;
+    border: 2px dashed var(--admin-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--admin-muted);
+    font-size: 0.75rem;
+  }
+
+  .image-upload-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+</style>
+
+<script>
+  const imageInput = document.getElementById('imageFile') as HTMLInputElement;
+  const imageHidden = document.getElementById('image') as HTMLInputElement;
+  const imagePreview = document.getElementById('imagePreview') as HTMLImageElement | HTMLDivElement;
+  const uploadStatus = document.getElementById('uploadStatus') as HTMLParagraphElement;
+  const uploadBtnText = document.getElementById('uploadBtnText') as HTMLSpanElement;
+  const removeBtn = document.getElementById('removeImage') as HTMLButtonElement;
+
+  imageInput?.addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    uploadBtnText.textContent = 'Subiendo...';
+    uploadStatus.textContent = '';
+    uploadStatus.style.color = 'var(--admin-muted)';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'uploads/band');
+
+    try {
+      const response = await fetch('/admin/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        imageHidden.value = result.url;
+
+        // Update preview
+        if (imagePreview.tagName === 'IMG') {
+          (imagePreview as HTMLImageElement).src = result.url;
+        } else {
+          const img = document.createElement('img');
+          img.id = 'imagePreview';
+          img.src = result.url;
+          img.className = 'image-preview';
+          img.style.cssText = 'width: 150px; height: 150px;';
+          imagePreview.parentNode?.replaceChild(img, imagePreview);
+        }
+
+        removeBtn.style.display = 'inline-flex';
+        uploadStatus.textContent = 'Imagen subida correctamente';
+        uploadStatus.style.color = 'var(--admin-success)';
+      } else {
+        uploadStatus.textContent = result.error || 'Error al subir imagen';
+        uploadStatus.style.color = 'var(--admin-danger)';
+      }
+    } catch (err) {
+      uploadStatus.textContent = 'Error de conexión';
+      uploadStatus.style.color = 'var(--admin-danger)';
+    }
+
+    uploadBtnText.textContent = 'Subir foto';
+  });
+
+  removeBtn?.addEventListener('click', () => {
+    imageHidden.value = '';
+
+    const placeholder = document.createElement('div');
+    placeholder.id = 'imagePreview';
+    placeholder.className = 'image-placeholder';
+    placeholder.style.cssText = 'width: 150px; height: 150px;';
+    placeholder.innerHTML = `
+      <svg style="width: 32px; height: 32px; color: var(--admin-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+      <span>Sin foto</span>
+    `;
+
+    const currentPreview = document.getElementById('imagePreview');
+    currentPreview?.parentNode?.replaceChild(placeholder, currentPreview);
+
+    removeBtn.style.display = 'none';
+    uploadStatus.textContent = '';
+  });
+</script>

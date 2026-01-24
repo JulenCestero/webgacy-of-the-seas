@@ -1,19 +1,22 @@
 ---
-import { getCollection } from "astro:content";
+import { db, concerts } from "../lib/db";
+import { asc, desc, gte, lt } from "drizzle-orm";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ConcertCard from "../components/ConcertCard.astro";
 import SocialLinks from "../components/SocialLinks.astro";
 
-// Get all concerts and sort by date
-const allConcerts = await getCollection("concerts");
-const sortedConcerts = allConcerts.sort((a, b) =>
-  new Date(a.data.date).getTime() - new Date(b.data.date).getTime()
-);
+// Get current date in ISO format for comparison
+const now = new Date().toISOString().split('T')[0];
 
-// Split into upcoming and past
-const now = new Date();
-const upcomingConcerts = sortedConcerts.filter(c => new Date(c.data.date) >= now);
-const pastConcerts = sortedConcerts.filter(c => new Date(c.data.date) < now).reverse();
+// Get upcoming concerts (date >= now) sorted ascending
+const upcomingConcerts = await db.select().from(concerts)
+  .where(gte(concerts.date, now))
+  .orderBy(asc(concerts.date));
+
+// Get past concerts (date < now) sorted descending (most recent first)
+const pastConcerts = await db.select().from(concerts)
+  .where(lt(concerts.date, now))
+  .orderBy(desc(concerts.date));
 ---
 
 <BaseLayout title="Conciertos" description="Próximos conciertos y fechas de la gira de Legacy of the Seas. Compra tus entradas y no te pierdas el directo.">
@@ -41,12 +44,12 @@ const pastConcerts = sortedConcerts.filter(c => new Date(c.data.date) < now).rev
         <div class="space-y-4 max-w-4xl">
           {upcomingConcerts.map((concert) => (
             <ConcertCard
-              title={concert.data.title}
-              date={concert.data.date}
-              venue={concert.data.venue}
-              city={concert.data.city}
-              ticketUrl={concert.data.ticketUrl}
-              isSoldOut={concert.data.isSoldOut}
+              title={concert.title}
+              date={new Date(concert.date)}
+              venue={concert.venue}
+              city={concert.city}
+              ticketUrl={concert.ticketUrl}
+              isSoldOut={concert.isSoldOut}
             />
           ))}
         </div>
@@ -74,11 +77,11 @@ const pastConcerts = sortedConcerts.filter(c => new Date(c.data.date) < now).rev
         <div class="space-y-4 max-w-4xl">
           {pastConcerts.map((concert) => (
             <ConcertCard
-              title={concert.data.title}
-              date={concert.data.date}
-              venue={concert.data.venue}
-              city={concert.data.city}
-              isSoldOut={concert.data.isSoldOut}
+              title={concert.title}
+              date={new Date(concert.date)}
+              venue={concert.venue}
+              city={concert.city}
+              isSoldOut={concert.isSoldOut}
               isPast={true}
             />
           ))}

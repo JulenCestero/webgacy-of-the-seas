@@ -24,8 +24,8 @@ envStatus.source = runtimeEnv?.TURSO_DATABASE_URL ? "Cloudflare runtime" : (impo
 
 // Try database connection
 try {
-  const { getDb, settings } = await import("../lib/db");
-  const db = getDb(runtimeEnv);
+  const { createDb, settings } = await import("../lib/db");
+  const db = createDb(runtimeEnv);
   const result = await db.select().from(settings).limit(1);
   dbStatus = `OK - ${result.length} rows`;
 } catch (e: any) {

@@ -7,12 +7,17 @@ import YouTubeEmbed from "../components/YouTubeEmbed.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import WaveDivider from "../components/WaveDivider.astro";
 import KrakenTentacles from "../components/KrakenTentacles.astro";
+import { db, settings } from "../lib/db";
+import { eq } from "drizzle-orm";
 
-// Load media settings from CMS
-import mediaSettings from "../content/settings/media.json";
+// Load media settings from database
+async function getSetting(key: string): Promise<string | null> {
+  const result = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+  return result[0]?.value || null;
+}
 
-const youtubeUrl = mediaSettings.youtubeVideoUrl;
-const spotifyUri = mediaSettings.spotifyAlbumUri;
+const youtubeUrl = await getSetting("youtubeVideoUrl");
+const spotifyUri = await getSetting("spotifyAlbumUri");
 ---
 
 <BaseLayout title="Inicio" description="Legacy of the Seas - Banda de Metal desde las profundidades del océano. Música épica, letras inmersivas y un sonido que te transportará.">

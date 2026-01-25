@@ -1,0 +1,96 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { db, concerts } from "../../../lib/db";
+import { desc } from "drizzle-orm";
+
+// Get all concerts sorted by date
+const allConcerts = await db.select().from(concerts).orderBy(desc(concerts.date));
+
+// Format date for display
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+
+// Check if concert is upcoming
+function isUpcoming(dateStr: string): boolean {
+  return new Date(dateStr) >= new Date();
+}
+---
+
+<AdminLayout title="Conciertos">
+  <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h1 class="admin-title">Conciertos</h1>
+      <p class="admin-subtitle">Gestiona las fechas de conciertos</p>
+    </div>
+    <a href="/admin/conciertos/nuevo" class="btn btn-primary">
+      <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Nuevo concierto
+    </a>
+  </div>
+
+  <div class="card" style="padding: 0; overflow: hidden;">
+    {allConcerts.length > 0 ? (
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Evento</th>
+              <th>Lugar</th>
+              <th>Estado</th>
+              <th style="text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allConcerts.map((concert) => (
+              <tr>
+                <td style="white-space: nowrap; font-weight: 500; color: var(--admin-accent);">
+                  {formatDate(concert.date)}
+                </td>
+                <td>
+                  <div style="font-weight: 500;">{concert.title}</div>
+                </td>
+                <td>
+                  <div>{concert.venue}</div>
+                  <div style="font-size: 0.8rem; color: var(--admin-muted);">{concert.city}</div>
+                </td>
+                <td>
+                  {concert.isSoldOut ? (
+                    <span class="badge badge-danger">Agotado</span>
+                  ) : isUpcoming(concert.date) ? (
+                    <span class="badge badge-success">Próximo</span>
+                  ) : (
+                    <span class="badge badge-warning">Pasado</span>
+                  )}
+                </td>
+                <td style="text-align: right;">
+                  <div class="actions" style="justify-content: flex-end;">
+                    <a href={`/admin/conciertos/${concert.id}`} class="btn btn-secondary">Editar</a>
+                    <form method="POST" action="/admin/api/concerts/delete" style="display: inline;">
+                      <input type="hidden" name="id" value={concert.id} />
+                      <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar este concierto?')">
+                        Eliminar
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div style="text-align: center; padding: 3rem;">
+        <p style="color: var(--admin-muted); margin-bottom: 1rem;">No hay conciertos registrados</p>
+        <a href="/admin/conciertos/nuevo" class="btn btn-primary">Crear el primero</a>
+      </div>
+    )}
+  </div>
+</AdminLayout>

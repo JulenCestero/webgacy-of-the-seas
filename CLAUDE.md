@@ -2,10 +2,51 @@
 
 ## Estado Actual
 
-**Última actualización**: 2026-01-24
+**Última actualización**: 2026-01-25
 
-### Proyecto Completado ✅
-La web está completamente funcional con todas las características implementadas.
+### Migración a Contenido Dinámico (En Progreso)
+
+La web está migrando de Decap CMS + Netlify a **Cloudflare Pages + Turso + Admin propio**.
+
+**Rama de trabajo**: `feature/dynamic-content`
+
+#### Fases Completadas
+- [x] **Fase 1**: Setup Turso y dependencias
+- [x] **Fase 2**: Esquema Drizzle ORM
+- [x] **Fase 3**: Migrar Astro a SSR
+- [x] **Fase 4**: Actualizar páginas para usar DB
+- [x] **Fase 5**: Panel Admin básico (conciertos, miembros, tienda)
+- [x] **Fase 6**: Panel Admin posts (archivo/blog)
+- [x] **Fase 7**: Migrar datos existentes
+
+#### Fases Pendientes
+- [ ] **Fase 8**: Auth con Cloudflare Access
+- [ ] **Fase 9**: Deploy a Cloudflare Pages
+- [ ] **Fase 10**: Cleanup (eliminar Decap, content/, netlify.toml)
+
+---
+
+## Nueva Arquitectura (Turso + Cloudflare)
+
+```
+[Usuario Final] → [Cloudflare Pages] → [Astro SSR] → [Turso DB]
+                                            ↑
+[Admin editando] → [/admin/*] ──────────────┘
+```
+
+### Stack Tecnológico
+- **Frontend**: Astro SSR con @astrojs/cloudflare adapter
+- **Base de datos**: Turso (SQLite distribuido)
+- **ORM**: Drizzle ORM (type-safe queries)
+- **Hosting**: Cloudflare Pages (pendiente)
+- **Auth**: Cloudflare Access (pendiente)
+
+### Costos: $0/mes
+| Servicio | Free Tier |
+|----------|-----------|
+| Cloudflare Pages | 500 deploys/mes, unlimited bandwidth |
+| Turso | 9GB storage, 1B rows read/mes |
+| Cloudflare Access | Hasta 50 usuarios |
 
 ---
 
@@ -30,44 +71,129 @@ src/
 │   ├── Bubbles.astro          # Burbujas para secciones
 │   ├── SideBubbles.astro      # Burbujas laterales globales
 │   └── Lightbox.astro         # Galería de imágenes modal
-├── content/
-│   ├── members/               # 4 miembros de la banda
-│   ├── concerts/              # 4 conciertos de ejemplo
-│   ├── merch/                 # 2 productos (CD + camiseta)
-│   ├── archivo/               # 1 entrada de blog
-│   └── settings/              # general.json, social.json
 ├── layouts/
-│   └── BaseLayout.astro       # Layout con SEO, Schema.org, favicons
+│   ├── BaseLayout.astro       # Layout con SEO, Schema.org, favicons
+│   └── AdminLayout.astro      # Layout para panel de administración
+├── lib/
+│   ├── db.ts                  # Cliente Turso + exportaciones Drizzle
+│   └── schema.ts              # Esquema de tablas Drizzle ORM
 ├── pages/
 │   ├── index.astro            # Home con efecto inmersión
 │   ├── conciertos.astro       # Listado próximos/pasados
 │   ├── nosotros.astro         # Equipo con modales
-│   ├── tienda.astro           # Merchandising con CMS
+│   ├── tienda.astro           # Merchandising
 │   ├── contacto.astro         # Formulario Netlify Forms
-│   └── archivo/               # Blog con [slug].astro
+│   ├── archivo/
+│   │   ├── index.astro        # Blog/noticias
+│   │   └── [slug].astro       # Entrada individual (SSR)
+│   └── admin/
+│       ├── index.astro        # Dashboard admin
+│       ├── settings.astro     # Configuración general
+│       ├── conciertos/        # CRUD conciertos
+│       ├── miembros/          # CRUD miembros
+│       ├── tienda/            # CRUD productos
+│       ├── archivo/           # CRUD posts
+│       └── api/               # Endpoints API (upload, delete)
 ├── styles/
 │   └── global.css             # Estilos, animaciones, utilidades
-└── content.config.ts          # Definición colecciones Astro
+scripts/
+└── migrate.ts                 # Script migración markdown → Turso
 
 public/
-├── admin/
-│   ├── index.html             # Decap CMS entry point
-│   └── config.yml             # Colecciones y campos CMS
-├── uploads/
-│   └── merch/                 # Imágenes productos
+├── uploads/                   # Imágenes subidas desde admin
+│   ├── band/                  # Fotos de miembros
+│   ├── merch/                 # Imágenes productos
+│   └── archivo/               # Imágenes de posts
 ├── images/
 │   ├── logo/                  # logo-ls.png, logo-horizontal.png
 │   └── band/                  # Fotos de la banda
 ├── favicon.png                # 32x32 (cyan LS)
 ├── favicon-192.png            # 192x192
 └── apple-touch-icon.png       # 180x180
-
-netlify.toml                   # Config deploy, headers, redirects
 ```
 
 ---
 
-## Páginas
+## Base de Datos (Turso)
+
+### Tablas
+
+```typescript
+// src/lib/schema.ts
+members: id, name, role, image, order, bio, createdAt, updatedAt
+concerts: id, title, date, venue, city, ticketUrl, isSoldOut, description, createdAt, updatedAt
+merch: id, name, description, image, price, buyUrl, order, createdAt, updatedAt
+posts: id, slug, title, date, image, excerpt, tags (JSON), gallery (JSON), body, createdAt, updatedAt
+settings: key, value, updatedAt
+```
+
+### Datos Actuales
+| Tabla | Registros |
+|-------|-----------|
+| members | 4 |
+| concerts | 4 |
+| merch | 2 |
+| posts | 1 |
+| settings | 6 |
+
+### Conexión
+```typescript
+// src/lib/db.ts
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient } from '@libsql/client';
+
+const client = createClient({
+  url: import.meta.env.TURSO_DATABASE_URL,
+  authToken: import.meta.env.TURSO_AUTH_TOKEN,
+});
+
+export const db = drizzle(client);
+```
+
+---
+
+## Panel de Administración
+
+**Acceso**: `http://localhost:4321/admin/` (desarrollo)
+
+### Rutas Admin
+| Ruta | Descripción |
+|------|-------------|
+| `/admin` | Dashboard con estadísticas |
+| `/admin/conciertos` | Lista de conciertos |
+| `/admin/conciertos/nuevo` | Crear concierto |
+| `/admin/conciertos/[id]` | Editar concierto |
+| `/admin/miembros` | Lista de miembros |
+| `/admin/miembros/nuevo` | Crear miembro |
+| `/admin/miembros/[id]` | Editar miembro |
+| `/admin/tienda` | Lista de productos |
+| `/admin/tienda/nuevo` | Crear producto |
+| `/admin/tienda/[id]` | Editar producto |
+| `/admin/archivo` | Lista de posts |
+| `/admin/archivo/nuevo` | Crear post |
+| `/admin/archivo/[id]` | Editar post |
+| `/admin/settings` | Configuración general |
+
+### APIs Internas
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/admin/api/upload` | POST | Subir imagen (FormData) |
+| `/admin/api/concerts/delete` | POST | Eliminar concierto |
+| `/admin/api/members/delete` | POST | Eliminar miembro |
+| `/admin/api/merch/delete` | POST | Eliminar producto |
+| `/admin/api/posts/delete` | POST | Eliminar post |
+
+### Características del Admin
+- Tema oscuro profesional
+- Formularios con secciones organizadas
+- Subida de imágenes con preview
+- Validación client-side y server-side
+- Mensajes de éxito/error
+- Zona peligrosa para eliminar (con confirmación)
+
+---
+
+## Páginas Públicas
 
 | Ruta | Archivo | Descripción |
 |------|---------|-------------|
@@ -78,7 +204,6 @@ netlify.toml                   # Config deploy, headers, redirects
 | `/archivo` | archivo/index.astro | Blog/noticias |
 | `/archivo/[slug]` | archivo/[slug].astro | Entrada individual |
 | `/contacto` | contacto.astro | Formulario de contacto |
-| `/admin` | admin/index.html | CMS (Decap) |
 
 ---
 
@@ -122,38 +247,11 @@ u: e65f0969bdae89ce6a523cdc2
 id: dcd925529c
 ```
 
-### Netlify Forms
-```
-Archivo: src/pages/contacto.astro
-Atributo: data-netlify="true"
-Honeypot: netlify-honeypot="bot-field"
-```
-Configurar notificaciones en: Netlify → Site → Forms → Notifications
-
 ### Spotify
 ```
 Archivo: src/components/SpotifyEmbed.astro
 Album: spotify:album:2f2fEmQkP6dBwOTNs47so9
 ```
-
----
-
-## CMS (Decap)
-
-**Acceso**: `https://legacyoftheseas.com/admin/`
-
-### Colecciones
-| Colección | Carpeta | Campos principales |
-|-----------|---------|-------------------|
-| Miembros | content/members/ | name, role, image, order, bio |
-| Conciertos | content/concerts/ | title, date, venue, city, ticketUrl, isSoldOut |
-| Tienda | content/merch/ | name, description, image, price, buyUrl, order |
-| Archivo | content/archivo/ | title, date, image, excerpt, tags, gallery, body |
-| Config | content/settings/ | general.json, social.json |
-
-### Tienda - Lógica de stock
-- **buyUrl con valor** → Imagen normal + "Comprar" → URL externa
-- **buyUrl vacío** → Imagen gris + "Sin Stock" + "Contáctanos" → /contacto
 
 ---
 
@@ -163,16 +261,47 @@ Album: spotify:album:2f2fEmQkP6dBwOTNs47so9
 npm run dev        # Desarrollo (localhost:4321)
 npm run build      # Build producción
 npm run preview    # Preview del build
+
+# Migraciones Drizzle
+npx drizzle-kit generate    # Generar migración
+npx drizzle-kit push        # Aplicar a Turso
+
+# Migrar datos desde markdown
+npx tsx scripts/migrate.ts
 ```
 
 ---
 
-## Deploy (Netlify)
+## Variables de Entorno
 
-- **Build command**: `npm run build`
-- **Publish directory**: `dist`
-- **Node version**: 18+
-- **Identity**: Habilitado (para CMS)
+```env
+# .env (no commitear)
+TURSO_DATABASE_URL=libsql://legacyoftheseas-xxx.turso.io
+TURSO_AUTH_TOKEN=eyJ...
+```
+
+---
+
+## Próximos Pasos
+
+### Fase 8: Auth con Cloudflare Access
+1. Configurar aplicación en CF Zero Trust
+2. Política: solo emails autorizados
+3. Login con Google/GitHub
+4. Probar acceso a `/admin/*`
+
+### Fase 9: Deploy a Cloudflare Pages
+1. Crear proyecto en CF Pages
+2. Conectar repo GitHub
+3. Variables: TURSO_DATABASE_URL, TURSO_AUTH_TOKEN
+4. Build: `npm run build`
+5. Output: `dist`
+
+### Fase 10: Cleanup
+1. Eliminar `public/admin/` (Decap CMS)
+2. Eliminar `src/content/` (archivos markdown)
+3. Eliminar `src/content.config.ts`
+4. Eliminar `netlify.toml`
 
 ---
 
@@ -188,8 +317,9 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 - Productos: 600x600px, JPG, ~80KB
 - Comando: `npx sharp input.png -o output.jpg -- resize 600 600`
 
-### Opción futura: Bandsintown
-Investigado pero no implementado. Widget oficial disponible en artists.bandsintown.com con sincronización automática. No se implementó para evitar duplicar gestión de conciertos (ya existe en CMS).
+### Tienda - Lógica de stock
+- **buyUrl con valor** → Imagen normal + "Comprar" → URL externa
+- **buyUrl vacío** → Imagen gris + "Sin Stock" + "Contáctanos" → /contacto
 
 ---
 

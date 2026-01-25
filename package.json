@@ -10,10 +10,20 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^12.6.12",
     "@astrojs/sitemap": "^3.7.0",
     "@astrojs/tailwind": "^6.0.2",
+    "@libsql/client": "^0.17.0",
     "@tailwindcss/typography": "^0.5.19",
     "astro": "^5.1.1",
+    "drizzle-orm": "^0.45.1",
+    "gray-matter": "^4.0.3",
+    "marked": "^17.0.1",
     "tailwindcss": "^3.4.17"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.8",
+    "tsx": "^4.21.0"
   }
 }

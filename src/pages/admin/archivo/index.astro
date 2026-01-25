@@ -1,0 +1,77 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { db, posts } from "../../../lib/db";
+import { desc } from "drizzle-orm";
+
+const allPosts = await db.select().from(posts).orderBy(desc(posts.date));
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+---
+
+<AdminLayout title="Archivo">
+  <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h1 class="admin-title">Archivo</h1>
+      <p class="admin-subtitle">Gestiona los posts del blog</p>
+    </div>
+    <a href="/admin/archivo/nuevo" class="btn btn-primary">
+      <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Nuevo post
+    </a>
+  </div>
+
+  <div class="card" style="padding: 0; overflow: hidden;">
+    {allPosts.length > 0 ? (
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 120px;">Fecha</th>
+              <th>Título</th>
+              <th style="width: 200px;">Slug</th>
+              <th style="text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allPosts.map((post) => (
+              <tr>
+                <td style="white-space: nowrap; font-weight: 500; color: var(--admin-accent);">{formatDate(post.date)}</td>
+                <td style="font-weight: 500;">{post.title}</td>
+                <td style="color: var(--admin-muted); font-family: monospace; font-size: 0.8rem;">{post.slug}</td>
+                <td style="text-align: right;">
+                  <div class="actions" style="justify-content: flex-end;">
+                    <a href={`/archivo/${post.slug}`} target="_blank" class="btn btn-secondary" title="Ver en web">
+                      <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                    <a href={`/admin/archivo/${post.id}`} class="btn btn-secondary">Editar</a>
+                    <form method="POST" action="/admin/api/posts/delete" style="display: inline;">
+                      <input type="hidden" name="id" value={post.id} />
+                      <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar este post?')">
+                        Eliminar
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div style="text-align: center; padding: 3rem;">
+        <p style="color: var(--admin-muted); margin-bottom: 1rem;">No hay posts registrados</p>
+        <a href="/admin/archivo/nuevo" class="btn btn-primary">Crear el primero</a>
+      </div>
+    )}
+  </div>
+</AdminLayout>

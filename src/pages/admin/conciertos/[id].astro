@@ -1,0 +1,186 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { db, concerts } from "../../../lib/db";
+import { eq } from "drizzle-orm";
+
+const { id } = Astro.params;
+
+let error = "";
+let success = "";
+
+// Get concert from database
+const result = await db.select().from(concerts).where(eq(concerts.id, id!)).limit(1);
+let concert = result[0];
+
+if (!concert) {
+  return Astro.redirect("/admin/conciertos");
+}
+
+// Handle form submission
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+
+    const title = formData.get("title") as string;
+    const date = formData.get("date") as string;
+    const venue = formData.get("venue") as string;
+    const city = formData.get("city") as string;
+    const ticketUrl = formData.get("ticketUrl") as string || null;
+    const isSoldOut = formData.get("isSoldOut") === "on";
+    const description = formData.get("description") as string || null;
+
+    // Validate required fields
+    if (!title || !date || !venue || !city) {
+      error = "Por favor, completa todos los campos obligatorios";
+    } else {
+      // Update in database
+      await db.update(concerts)
+        .set({
+          title,
+          date,
+          venue,
+          city,
+          ticketUrl,
+          isSoldOut,
+          description,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(concerts.id, id!));
+
+      success = "Concierto actualizado correctamente";
+
+      // Refresh concert data
+      const updated = await db.select().from(concerts).where(eq(concerts.id, id!)).limit(1);
+      concert = updated[0];
+    }
+  } catch (e) {
+    error = "Error al actualizar el concierto: " + (e as Error).message;
+  }
+}
+
+// Format date for input
+const formattedDate = concert.date.split('T')[0];
+---
+
+<AdminLayout title="Editar concierto">
+  <a href="/admin/conciertos" class="back-link">
+    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Volver a conciertos
+  </a>
+
+  <div class="admin-header">
+    <h1 class="admin-title">Editar concierto</h1>
+    <p class="admin-subtitle">{concert.title}</p>
+  </div>
+
+  {error && <div class="alert alert-error">{error}</div>}
+  {success && <div class="alert alert-success">{success}</div>}
+
+  <form method="POST" style="max-width: 700px;">
+    <!-- Información del evento -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h3>Información del evento</h3>
+      </div>
+      <div class="form-section-content">
+        <div class="form-field">
+          <label for="title">Título del evento <span class="required">*</span></label>
+          <input type="text" id="title" name="title" required value={concert.title} placeholder="Legacy of the Seas en..." />
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="date">Fecha <span class="required">*</span></label>
+            <input type="date" id="date" name="date" required value={formattedDate} />
+          </div>
+          <div class="form-field">
+            <label for="city">Ciudad <span class="required">*</span></label>
+            <input type="text" id="city" name="city" required value={concert.city} placeholder="Madrid" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="venue">Lugar / Sala <span class="required">*</span></label>
+          <input type="text" id="venue" name="venue" required value={concert.venue} placeholder="Sala Apolo, Kafe Antzokia..." />
+        </div>
+      </div>
+    </div>
+
+    <!-- Entradas -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+        </svg>
+        <h3>Entradas</h3>
+      </div>
+      <div class="form-section-content">
+        <div class="form-field">
+          <label for="ticketUrl">URL de compra de entradas</label>
+          <input type="url" id="ticketUrl" name="ticketUrl" value={concert.ticketUrl || ""} placeholder="https://tickets.example.com/..." />
+          <small class="form-hint">Deja vacío si las entradas no están a la venta</small>
+        </div>
+
+        <label class="checkbox-field">
+          <input type="checkbox" id="isSoldOut" name="isSoldOut" checked={concert.isSoldOut} />
+          <span>Entradas agotadas (Sold Out)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Descripción -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+        <h3>Descripción</h3>
+      </div>
+      <div class="form-section-content">
+        <div class="form-field">
+          <label for="description">Descripción del evento (opcional)</label>
+          <textarea id="description" name="description" rows="4" placeholder="Información adicional sobre el concierto...">{concert.description || ""}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Guardar cambios
+      </button>
+      <a href="/admin/conciertos" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+
+  <!-- Delete section -->
+  <div class="danger-zone" style="max-width: 700px;">
+    <div class="danger-zone-header">
+      <div class="danger-zone-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </div>
+      <div class="danger-zone-content">
+        <h4>Zona peligrosa</h4>
+        <p>Esta acción no se puede deshacer. El concierto se eliminará permanentemente.</p>
+      </div>
+    </div>
+    <form method="POST" action="/admin/api/concerts/delete">
+      <input type="hidden" name="id" value={concert.id} />
+      <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar este concierto?')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Eliminar concierto
+      </button>
+    </form>
+  </div>
+</AdminLayout>

@@ -1,12 +1,10 @@
 ---
-import { getCollection } from "astro:content";
+import { db, posts } from "../../lib/db";
+import { desc } from "drizzle-orm";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 // Get all posts sorted by date (newest first)
-const allPosts = await getCollection("archivo");
-const sortedPosts = allPosts.sort((a, b) =>
-  new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
-);
+const sortedPosts = await db.select().from(posts).orderBy(desc(posts.date));
 
 // Format date helper
 function formatDate(date: Date): string {
@@ -15,6 +13,16 @@ function formatDate(date: Date): string {
     month: "long",
     year: "numeric",
   });
+}
+
+// Helper to parse JSON arrays
+function parseJsonArray(str: string | null): string[] {
+  if (!str) return [];
+  try {
+    return JSON.parse(str);
+  } catch {
+    return [];
+  }
 }
 ---
 
@@ -36,14 +44,16 @@ function formatDate(date: Date): string {
     <div class="container mx-auto px-4">
       {sortedPosts.length > 0 ? (
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {sortedPosts.map((post) => (
+          {sortedPosts.map((post) => {
+            const tags = parseJsonArray(post.tags);
+            return (
             <article class="group bg-band-dark-100 border border-band-sea/20 rounded-lg overflow-hidden hover:border-band-sea/50 transition-all">
               <!-- Image -->
-              {post.data.image && (
-                <a href={`/archivo/${post.id}`} class="block aspect-video overflow-hidden">
+              {post.image && (
+                <a href={`/archivo/${post.slug}`} class="block aspect-video overflow-hidden">
                   <img
-                    src={post.data.image}
-                    alt={post.data.title}
+                    src={post.image}
+                    alt={post.title}
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
@@ -55,33 +65,33 @@ function formatDate(date: Date): string {
                 <!-- Date & Tags -->
                 <div class="flex items-center gap-3 mb-3">
                   <time class="text-sm text-band-sea">
-                    {formatDate(new Date(post.data.date))}
+                    {formatDate(new Date(post.date))}
                   </time>
-                  {post.data.tags && post.data.tags.length > 0 && (
+                  {tags.length > 0 && (
                     <span class="text-gray-600">•</span>
                     <span class="text-xs text-gray-500 uppercase tracking-wider">
-                      {post.data.tags[0]}
+                      {tags[0]}
                     </span>
                   )}
                 </div>
 
                 <!-- Title -->
                 <h2 class="text-xl font-metal text-white mb-3 group-hover:text-band-sea transition-colors">
-                  <a href={`/archivo/${post.id}`}>
-                    {post.data.title}
+                  <a href={`/archivo/${post.slug}`}>
+                    {post.title}
                   </a>
                 </h2>
 
                 <!-- Excerpt -->
-                {post.data.excerpt && (
+                {post.excerpt && (
                   <p class="text-gray-400 text-sm line-clamp-3 mb-4">
-                    {post.data.excerpt}
+                    {post.excerpt}
                   </p>
                 )}
 
                 <!-- Read more -->
                 <a
-                  href={`/archivo/${post.id}`}
+                  href={`/archivo/${post.slug}`}
                   class="inline-flex items-center gap-2 text-sm text-band-sea hover:text-band-gold transition-colors font-medium"
                 >
                   Leer más
@@ -91,7 +101,7 @@ function formatDate(date: Date): string {
                 </a>
               </div>
             </article>
-          ))}
+          )})}
         </div>
       ) : (
         <div class="text-center py-12">

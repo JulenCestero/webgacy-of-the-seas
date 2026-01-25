@@ -1,0 +1,80 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { db, merch } from "../../../lib/db";
+import { asc } from "drizzle-orm";
+
+const allMerch = await db.select().from(merch).orderBy(asc(merch.order));
+---
+
+<AdminLayout title="Tienda">
+  <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h1 class="admin-title">Tienda</h1>
+      <p class="admin-subtitle">Gestiona los productos de merchandising</p>
+    </div>
+    <a href="/admin/tienda/nuevo" class="btn btn-primary">
+      <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Nuevo producto
+    </a>
+  </div>
+
+  <div class="card" style="padding: 0; overflow: hidden;">
+    {allMerch.length > 0 ? (
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">Orden</th>
+              <th style="width: 70px;">Imagen</th>
+              <th>Nombre</th>
+              <th style="width: 100px;">Precio</th>
+              <th style="width: 100px;">Stock</th>
+              <th style="text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allMerch.map((item) => (
+              <tr>
+                <td style="text-align: center; color: var(--admin-muted);">{item.order}</td>
+                <td>
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} style="width: 50px; height: 50px; object-fit: cover; border-radius: 0.25rem;" />
+                  ) : (
+                    <div style="width: 50px; height: 50px; background: var(--admin-border); border-radius: 0.25rem;"></div>
+                  )}
+                </td>
+                <td style="font-weight: 500;">{item.name}</td>
+                <td style="color: var(--admin-accent); font-weight: 500;">{item.price || "-"}</td>
+                <td>
+                  {item.buyUrl ? (
+                    <span class="badge badge-success">En stock</span>
+                  ) : (
+                    <span class="badge badge-danger">Sin stock</span>
+                  )}
+                </td>
+                <td style="text-align: right;">
+                  <div class="actions" style="justify-content: flex-end;">
+                    <a href={`/admin/tienda/${item.id}`} class="btn btn-secondary">Editar</a>
+                    <form method="POST" action="/admin/api/merch/delete" style="display: inline;">
+                      <input type="hidden" name="id" value={item.id} />
+                      <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar este producto?')">
+                        Eliminar
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div style="text-align: center; padding: 3rem;">
+        <p style="color: var(--admin-muted); margin-bottom: 1rem;">No hay productos registrados</p>
+        <a href="/admin/tienda/nuevo" class="btn btn-primary">Crear el primero</a>
+      </div>
+    )}
+  </div>
+</AdminLayout>

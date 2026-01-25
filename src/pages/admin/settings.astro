@@ -1,0 +1,158 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { db, settings } from "../../lib/db";
+import { eq } from "drizzle-orm";
+
+let error = "";
+let success = "";
+
+// Helper to get setting value
+async function getSetting(key: string): Promise<string> {
+  const result = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+  return result[0]?.value || "";
+}
+
+// Load current settings
+let youtubeVideoUrl = await getSetting("youtubeVideoUrl");
+let spotifyAlbumUri = await getSetting("spotifyAlbumUri");
+let bandName = await getSetting("bandName");
+let tagline = await getSetting("tagline");
+let bookingEmail = await getSetting("bookingEmail");
+let pressEmail = await getSetting("pressEmail");
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+
+    const settingsToSave = [
+      { key: "youtubeVideoUrl", value: formData.get("youtubeVideoUrl") as string || "" },
+      { key: "spotifyAlbumUri", value: formData.get("spotifyAlbumUri") as string || "" },
+      { key: "bandName", value: formData.get("bandName") as string || "" },
+      { key: "tagline", value: formData.get("tagline") as string || "" },
+      { key: "bookingEmail", value: formData.get("bookingEmail") as string || "" },
+      { key: "pressEmail", value: formData.get("pressEmail") as string || "" },
+    ];
+
+    for (const setting of settingsToSave) {
+      // Check if setting exists
+      const existing = await db.select().from(settings).where(eq(settings.key, setting.key)).limit(1);
+
+      if (existing.length > 0) {
+        // Update
+        await db.update(settings)
+          .set({ value: setting.value, updatedAt: new Date().toISOString() })
+          .where(eq(settings.key, setting.key));
+      } else {
+        // Insert
+        await db.insert(settings).values({
+          key: setting.key,
+          value: setting.value,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    success = "Configuración guardada correctamente";
+
+    // Reload values
+    youtubeVideoUrl = await getSetting("youtubeVideoUrl");
+    spotifyAlbumUri = await getSetting("spotifyAlbumUri");
+    bandName = await getSetting("bandName");
+    tagline = await getSetting("tagline");
+    bookingEmail = await getSetting("bookingEmail");
+    pressEmail = await getSetting("pressEmail");
+  } catch (e) {
+    error = "Error al guardar: " + (e as Error).message;
+  }
+}
+---
+
+<AdminLayout title="Ajustes">
+  <div class="admin-header">
+    <h1 class="admin-title">Ajustes</h1>
+    <p class="admin-subtitle">Configuración general del sitio</p>
+  </div>
+
+  {error && <div class="alert alert-error">{error}</div>}
+  {success && <div class="alert alert-success">{success}</div>}
+
+  <form method="POST" style="max-width: 700px;">
+    <!-- Media settings -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+        <h3>Multimedia</h3>
+      </div>
+      <div class="form-section-content">
+        <div class="form-field">
+          <label for="youtubeVideoUrl">URL del video de YouTube</label>
+          <input type="url" id="youtubeVideoUrl" name="youtubeVideoUrl" value={youtubeVideoUrl} placeholder="https://www.youtube.com/watch?v=..." />
+          <small class="form-hint">Video que aparece en la página de inicio</small>
+        </div>
+
+        <div class="form-field">
+          <label for="spotifyAlbumUri">URI del álbum de Spotify</label>
+          <input type="text" id="spotifyAlbumUri" name="spotifyAlbumUri" value={spotifyAlbumUri} placeholder="spotify:album:xxxxx" />
+          <small class="form-hint">Formato: spotify:album:ID del álbum</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- General settings -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        <h3>General</h3>
+      </div>
+      <div class="form-section-content">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="bandName">Nombre de la banda</label>
+            <input type="text" id="bandName" name="bandName" value={bandName} placeholder="Legacy of the Seas" />
+          </div>
+
+          <div class="form-field">
+            <label for="tagline">Tagline</label>
+            <input type="text" id="tagline" name="tagline" value={tagline} placeholder="Metal desde las profundidades..." />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact settings -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <h3>Contacto</h3>
+      </div>
+      <div class="form-section-content">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="bookingEmail">Email de booking</label>
+            <input type="email" id="bookingEmail" name="bookingEmail" value={bookingEmail} placeholder="booking@legacyoftheseas.com" />
+          </div>
+
+          <div class="form-field">
+            <label for="pressEmail">Email de prensa</label>
+            <input type="email" id="pressEmail" name="pressEmail" value={pressEmail} placeholder="prensa@legacyoftheseas.com" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Guardar cambios
+      </button>
+    </div>
+  </form>
+</AdminLayout>

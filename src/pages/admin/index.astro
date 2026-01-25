@@ -1,8 +1,12 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
-import { db, concerts, members, merch, posts } from "../../lib/db";
+import { createDb, concerts, members, merch, posts } from "../../lib/db";
 import { count, gte } from "drizzle-orm";
 
+
+// Get runtime env from Cloudflare
+const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefined;
+const db = createDb(runtimeEnv);
 // Get counts from database
 const [concertsCount] = await db.select({ count: count() }).from(concerts);
 const [membersCount] = await db.select({ count: count() }).from(members);

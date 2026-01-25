@@ -7,8 +7,12 @@ import YouTubeEmbed from "../components/YouTubeEmbed.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import WaveDivider from "../components/WaveDivider.astro";
 import KrakenTentacles from "../components/KrakenTentacles.astro";
-import { db, settings } from "../lib/db";
+import { createDb, settings } from "../lib/db";
 import { eq } from "drizzle-orm";
+
+// Get runtime env from Cloudflare
+const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefined;
+const db = createDb(runtimeEnv);
 
 // Load media settings from database
 async function getSetting(key: string): Promise<string | null> {
@@ -55,7 +59,7 @@ const spotifyUri = await getSetting("spotifyAlbumUri");
 
   <!-- Concerts section - Mid depth -->
   <div class="bg-depth-mid">
-    <ConcertPreview />
+    <ConcertPreview runtimeEnv={runtimeEnv} />
   </div>
 
   <!-- Wave transition -->

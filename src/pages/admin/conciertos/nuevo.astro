@@ -1,7 +1,11 @@
 ---
 import AdminLayout from "../../../layouts/AdminLayout.astro";
-import { db, concerts } from "../../../lib/db";
+import { createDb, concerts } from "../../../lib/db";
 
+
+// Get runtime env from Cloudflare
+const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefined;
+const db = createDb(runtimeEnv);
 let error = "";
 let success = "";
 

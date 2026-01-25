@@ -1,7 +1,14 @@
 ---
 // Preview de próximos conciertos para la home
-import { db, concerts } from "../lib/db";
+import { createDb, concerts } from "../lib/db";
 import { asc, gte } from "drizzle-orm";
+
+interface Props {
+  runtimeEnv?: Record<string, string>;
+}
+
+const { runtimeEnv } = Astro.props;
+const db = createDb(runtimeEnv);
 
 // Get upcoming concerts (max 3) from database
 const now = new Date().toISOString().split('T')[0];

@@ -1,9 +1,13 @@
 ---
-import { db, posts } from "../../lib/db";
+import { createDb, posts } from "../../lib/db";
 import { eq } from "drizzle-orm";
 import { marked } from "marked";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Lightbox from "../../components/Lightbox.astro";
+
+// Get runtime env from Cloudflare
+const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefined;
+const db = createDb(runtimeEnv);
 
 // Get slug from URL params
 const { slug } = Astro.params;

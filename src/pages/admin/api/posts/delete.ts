@@ -1,9 +1,12 @@
 import type { APIRoute } from "astro";
-import { db, posts } from "../../../../lib/db";
+import { createDb, posts } from "../../../../lib/db";
 import { eq } from "drizzle-orm";
 
-export const POST: APIRoute = async ({ request, redirect }) => {
+export const POST: APIRoute = async ({ request, redirect, locals }) => {
   try {
+    const runtimeEnv = (locals as any).runtime?.env as Record<string, string> | undefined;
+    const db = createDb(runtimeEnv);
+
     const formData = await request.formData();
     const id = formData.get("id") as string;
 

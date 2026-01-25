@@ -1,7 +1,11 @@
 ---
-import { db, posts } from "../../lib/db";
+import { createDb, posts } from "../../lib/db";
 import { desc } from "drizzle-orm";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+
+// Get runtime env from Cloudflare
+const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefined;
+const db = createDb(runtimeEnv);
 
 // Get all posts sorted by date (newest first)
 const sortedPosts = await db.select().from(posts).orderBy(desc(posts.date));

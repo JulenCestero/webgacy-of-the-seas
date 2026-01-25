@@ -1,9 +1,13 @@
 ---
-import { db, members } from "../lib/db";
+import { createDb, members } from "../lib/db";
 import { asc } from "drizzle-orm";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import MemberCard from "../components/MemberCard.astro";
 import MemberModal from "../components/MemberModal.astro";
+
+// Get runtime env from Cloudflare
+const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefined;
+const db = createDb(runtimeEnv);
 
 // Get all members sorted by order
 const sortedMembers = await db.select().from(members).orderBy(asc(members.order));

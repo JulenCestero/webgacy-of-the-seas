@@ -1,8 +1,12 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import MerchCard from "../components/MerchCard.astro";
-import { db, merch } from "../lib/db";
+import { createDb, merch } from "../lib/db";
 import { asc } from "drizzle-orm";
+
+// Get runtime env from Cloudflare
+const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefined;
+const db = createDb(runtimeEnv);
 
 // Get all merch items sorted by order
 const sortedMerch = await db.select().from(merch).orderBy(asc(merch.order));

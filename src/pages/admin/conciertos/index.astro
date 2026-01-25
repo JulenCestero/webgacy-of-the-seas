@@ -1,8 +1,12 @@
 ---
 import AdminLayout from "../../../layouts/AdminLayout.astro";
-import { db, concerts } from "../../../lib/db";
+import { createDb, concerts } from "../../../lib/db";
 import { desc } from "drizzle-orm";
 
+
+// Get runtime env from Cloudflare
+const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefined;
+const db = createDb(runtimeEnv);
 // Get all concerts sorted by date
 const allConcerts = await db.select().from(concerts).orderBy(desc(concerts.date));
 

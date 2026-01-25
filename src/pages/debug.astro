@@ -6,23 +6,26 @@ let envStatus = {
   hasUrl: false,
   hasToken: false,
   urlPreview: "",
+  source: "unknown",
 };
 
-// Check environment variables
-try {
-  const url = import.meta.env.TURSO_DATABASE_URL;
-  const token = import.meta.env.TURSO_AUTH_TOKEN;
+// Get runtime env from Cloudflare
+const runtime = Astro.locals.runtime;
+const runtimeEnv = runtime?.env as Record<string, string> | undefined;
 
-  envStatus.hasUrl = !!url;
-  envStatus.hasToken = !!token;
-  envStatus.urlPreview = url ? url.substring(0, 30) + "..." : "NOT SET";
-} catch (e: any) {
-  envStatus.urlPreview = "Error: " + e.message;
-}
+// Check environment variables - try runtime first, then import.meta.env
+const url = runtimeEnv?.TURSO_DATABASE_URL || import.meta.env.TURSO_DATABASE_URL;
+const token = runtimeEnv?.TURSO_AUTH_TOKEN || import.meta.env.TURSO_AUTH_TOKEN;
+
+envStatus.hasUrl = !!url;
+envStatus.hasToken = !!token;
+envStatus.urlPreview = url ? url.substring(0, 40) + "..." : "NOT SET";
+envStatus.source = runtimeEnv?.TURSO_DATABASE_URL ? "Cloudflare runtime" : (import.meta.env.TURSO_DATABASE_URL ? "import.meta.env" : "none");
 
 // Try database connection
 try {
-  const { db, settings } = await import("../lib/db");
+  const { getDb, settings } = await import("../lib/db");
+  const db = getDb(runtimeEnv);
   const result = await db.select().from(settings).limit(1);
   dbStatus = `OK - ${result.length} rows`;
 } catch (e: any) {
@@ -45,9 +48,11 @@ try {
   <h1>Debug Info</h1>
 
   <h2>Environment Variables</h2>
+  <p>Source: <strong>{envStatus.source}</strong></p>
   <p>TURSO_DATABASE_URL: <span class={envStatus.hasUrl ? "ok" : "error"}>{envStatus.hasUrl ? "SET" : "NOT SET"}</span></p>
   <p>Preview: {envStatus.urlPreview}</p>
   <p>TURSO_AUTH_TOKEN: <span class={envStatus.hasToken ? "ok" : "error"}>{envStatus.hasToken ? "SET" : "NOT SET"}</span></p>
+  <p>Runtime object exists: <span class={runtime ? "ok" : "error"}>{runtime ? "YES" : "NO"}</span></p>
 
   <h2>Database Connection</h2>
   <p>Status: <span class={dbStatus.startsWith("OK") ? "ok" : "error"}>{dbStatus}</span></p>

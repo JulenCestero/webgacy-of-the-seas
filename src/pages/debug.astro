@@ -1,0 +1,64 @@
+---
+// Página de debug - eliminar después de resolver el problema
+let dbStatus = "No probado";
+let dbError = "";
+let envStatus = {
+  hasUrl: false,
+  hasToken: false,
+  urlPreview: "",
+};
+
+// Check environment variables
+try {
+  const url = import.meta.env.TURSO_DATABASE_URL;
+  const token = import.meta.env.TURSO_AUTH_TOKEN;
+
+  envStatus.hasUrl = !!url;
+  envStatus.hasToken = !!token;
+  envStatus.urlPreview = url ? url.substring(0, 30) + "..." : "NOT SET";
+} catch (e: any) {
+  envStatus.urlPreview = "Error: " + e.message;
+}
+
+// Try database connection
+try {
+  const { db, settings } = await import("../lib/db");
+  const result = await db.select().from(settings).limit(1);
+  dbStatus = `OK - ${result.length} rows`;
+} catch (e: any) {
+  dbStatus = "ERROR";
+  dbError = e.message || String(e);
+}
+---
+
+<html>
+<head>
+  <title>Debug</title>
+  <style>
+    body { font-family: monospace; background: #1a1a1a; color: #fff; padding: 20px; }
+    .ok { color: #4ade80; }
+    .error { color: #f87171; }
+    pre { background: #333; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>Debug Info</h1>
+
+  <h2>Environment Variables</h2>
+  <p>TURSO_DATABASE_URL: <span class={envStatus.hasUrl ? "ok" : "error"}>{envStatus.hasUrl ? "SET" : "NOT SET"}</span></p>
+  <p>Preview: {envStatus.urlPreview}</p>
+  <p>TURSO_AUTH_TOKEN: <span class={envStatus.hasToken ? "ok" : "error"}>{envStatus.hasToken ? "SET" : "NOT SET"}</span></p>
+
+  <h2>Database Connection</h2>
+  <p>Status: <span class={dbStatus.startsWith("OK") ? "ok" : "error"}>{dbStatus}</span></p>
+  {dbError && (
+    <div>
+      <p>Error:</p>
+      <pre>{dbError}</pre>
+    </div>
+  )}
+
+  <h2>Runtime Info</h2>
+  <p>Timestamp: {new Date().toISOString()}</p>
+</body>
+</html>

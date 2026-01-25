@@ -1,11 +1,11 @@
 import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
+import { createClient } from '@libsql/client/web';
 import * as schema from './schema';
 
-// Cliente de Turso
+// Cliente de Turso (usando cliente web para Cloudflare Workers)
 const client = createClient({
-  url: import.meta.env.TURSO_DATABASE_URL,
-  authToken: import.meta.env.TURSO_AUTH_TOKEN,
+  url: import.meta.env.TURSO_DATABASE_URL || '',
+  authToken: import.meta.env.TURSO_AUTH_TOKEN || '',
 });
 
 // Instancia de Drizzle con esquema tipado

@@ -19,6 +19,7 @@ export const concerts = sqliteTable('concerts', {
   date: text('date').notNull(), // ISO date string
   venue: text('venue').notNull(),
   city: text('city').notNull(),
+  image: text('image'), // Cartel del concierto
   ticketUrl: text('ticket_url'),
   isSoldOut: integer('is_sold_out', { mode: 'boolean' }).default(false),
   description: text('description'), // Contenido markdown

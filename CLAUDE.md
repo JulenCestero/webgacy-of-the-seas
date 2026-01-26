@@ -309,6 +309,15 @@ TURSO_AUTH_TOKEN=eyJ...
 ### Documentación
 Ver `docs/seo-audit.md` para el informe completo.
 
+### Google Search Console
+- **Propiedad verificada**: `https://legacyoftheseas.pages.dev/`
+- **Archivo verificación**: `public/google5e9217c10aa451ce.html`
+- **Sitemaps enviados**: `sitemap-index.xml`, `sitemap-0.xml` (pendiente de procesar)
+- **Estado**: Página indexada, pendiente re-indexar para actualizar canónica a pages.dev
+
+### TODO (2026-01-27)
+- [ ] Solicitar re-indexación en Google Search Console (esperar a mañana, límite de solicitudes alcanzado)
+
 ---
 
 ## Notas Técnicas

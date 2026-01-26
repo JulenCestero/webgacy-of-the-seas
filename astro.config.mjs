@@ -12,5 +12,5 @@ export default defineConfig({
       filter: (page) => !page.includes('/admin/')
     })
   ],
-  site: "https://legacyoftheseas.com", // Actualizar cuando tengas dominio en Cloudflare
+  site: "https://legacyoftheseas.pages.dev",
 });

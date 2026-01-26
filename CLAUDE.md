@@ -20,11 +20,9 @@
 
 ---
 
-### Migración a Contenido Dinámico (En Progreso)
+### Migración a Contenido Dinámico (Completada)
 
-La web está migrando de Decap CMS + Netlify a **Cloudflare Pages + Turso + Admin propio**.
-
-**Rama de trabajo**: `feature/dynamic-content`
+La web ha migrado de Decap CMS + Netlify a **Cloudflare Pages + Turso + Admin propio**.
 
 #### Fases Completadas
 - [x] **Fase 1**: Setup Turso y dependencias
@@ -35,10 +33,10 @@ La web está migrando de Decap CMS + Netlify a **Cloudflare Pages + Turso + Admi
 - [x] **Fase 6**: Panel Admin posts (archivo/blog)
 - [x] **Fase 7**: Migrar datos existentes
 
-#### Fases Pendientes
-- [ ] **Fase 8**: Auth con Cloudflare Access
-- [ ] **Fase 9**: Deploy a Cloudflare Pages
-- [ ] **Fase 10**: Cleanup (eliminar Decap, content/, netlify.toml)
+- [x] **Fase 8**: Auth con Cloudflare Access
+- [x] **Fase 9**: Deploy a Cloudflare Pages
+- [x] **Fase 10**: Cleanup (eliminar Decap, content/, netlify.toml)
+- [x] **Auditoría SEO**: robots.txt, schemas, og:image, headers
 
 ---
 
@@ -54,8 +52,8 @@ La web está migrando de Decap CMS + Netlify a **Cloudflare Pages + Turso + Admi
 - **Frontend**: Astro SSR con @astrojs/cloudflare adapter
 - **Base de datos**: Turso (SQLite distribuido)
 - **ORM**: Drizzle ORM (type-safe queries)
-- **Hosting**: Cloudflare Pages (pendiente)
-- **Auth**: Cloudflare Access (pendiente)
+- **Hosting**: Cloudflare Pages
+- **Auth**: Cloudflare Access
 
 ### Costos: $0/mes
 | Servicio | Free Tier |
@@ -150,7 +148,7 @@ settings: key, value, updatedAt
 | concerts | 4 |
 | merch | 2 |
 | posts | 1 |
-| settings | 6 |
+| settings | 13 |
 
 ### Conexión
 ```typescript
@@ -188,7 +186,7 @@ export const db = drizzle(client);
 | `/admin/archivo` | Lista de posts |
 | `/admin/archivo/nuevo` | Crear post |
 | `/admin/archivo/[id]` | Editar post |
-| `/admin/settings` | Configuración general |
+| `/admin/settings` | Configuración general + Redes sociales |
 
 ### APIs Internas
 | Endpoint | Método | Descripción |
@@ -298,26 +296,18 @@ TURSO_AUTH_TOKEN=eyJ...
 
 ---
 
-## Próximos Pasos
+## SEO
 
-### Fase 8: Auth con Cloudflare Access
-1. Configurar aplicación en CF Zero Trust
-2. Política: solo emails autorizados
-3. Login con Google/GitHub
-4. Probar acceso a `/admin/*`
+### Implementado
+- `robots.txt` - Bloquea /admin/ y /r2/
+- `_headers` - Security headers + cache para Cloudflare
+- `og-image.jpg` - Logo horizontal 1200x630px
+- Schema.org: MusicGroup, MusicEvent, Product, BlogPosting, BreadcrumbList
+- Preconnect Google Fonts
+- og:locale es_ES
 
-### Fase 9: Deploy a Cloudflare Pages
-1. Crear proyecto en CF Pages
-2. Conectar repo GitHub
-3. Variables: TURSO_DATABASE_URL, TURSO_AUTH_TOKEN
-4. Build: `npm run build`
-5. Output: `dist`
-
-### Fase 10: Cleanup
-1. Eliminar `public/admin/` (Decap CMS)
-2. Eliminar `src/content/` (archivos markdown)
-3. Eliminar `src/content.config.ts`
-4. Eliminar `netlify.toml`
+### Documentación
+Ver `docs/seo-audit.md` para el informe completo.
 
 ---
 
@@ -339,12 +329,18 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ---
 
-## Redes Sociales (configuradas)
+## Redes Sociales
 
-- Instagram: @legacy.of.the.seas
-- Facebook: /legacy.of.the.seas
-- YouTube: @legacyoftheseas
-- Spotify: artist/0VfU5iDeWVTKfvhyos3Sih
-- Bandcamp: legacy-of-the-seas.bandcamp.com
-- TikTok: @legacy.of.the.seas
-- X/Twitter: @legacyoftheseas
+**Editables desde**: `/admin/settings` → Sección "Redes Sociales"
+
+| Red | Usuario |
+|-----|---------|
+| Instagram | @legacy.of.the.seas |
+| Facebook | /legacy.of.the.seas |
+| YouTube | @legacyoftheseas |
+| Spotify | artist/0VfU5iDeWVTKfvhyos3Sih |
+| Bandcamp | legacy-of-the-seas.bandcamp.com |
+| TikTok | @legacy.of.the.seas |
+| X/Twitter | @legacyoftheseas |
+
+El componente `SocialLinks.astro` lee las URLs de la base de datos (tabla `settings`).

@@ -8,7 +8,7 @@ interface Props {
 
 const {
   title = "Legacy of the Seas",
-  subtitle = "Epic Metal desde Donostia",
+  subtitle = "Metal Sinfónico desde Donostia",
   logoSrc,
   backgroundImage = "/images/band/band-photo.jpg"
 } = Astro.props;
@@ -43,6 +43,9 @@ const hasLogo = logoSrc && logoSrc.length > 0;
 
   <!-- Content -->
   <div class="relative z-10 w-full text-center">
+    <!-- SEO: Hidden H1 for search engines -->
+    <h1 class="sr-only">Legacy of the Seas - Banda de Metal Sinfónico</h1>
+
     <!-- Logo -->
     <div class="mb-8 mx-4 sm:mx-8 md:mx-[10%] lg:mx-[12%]">
       {hasLogo ? (
@@ -63,11 +66,11 @@ const hasLogo = logoSrc && logoSrc.length > 0;
       )}
     </div>
 
-    <!-- Title (only shown if provided) -->
+    <!-- Title (only shown if provided, displayed as h2 since H1 is sr-only above) -->
     {title && (
-      <h1 class="text-5xl md:text-7xl lg:text-8xl font-metal text-gradient mb-6 leading-tight drop-shadow-2xl px-4">
+      <p class="text-5xl md:text-7xl lg:text-8xl font-metal text-gradient mb-6 leading-tight drop-shadow-2xl px-4" role="heading" aria-level="2">
         {title}
-      </h1>
+      </p>
     )}
 
     <!-- Subtitle -->

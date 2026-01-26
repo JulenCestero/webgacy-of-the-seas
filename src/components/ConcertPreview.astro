@@ -43,45 +43,60 @@ function formatDate(dateStr: string): string {
     <!-- Concert cards -->
     {upcomingConcerts.length > 0 ? (
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        {upcomingConcerts.map((concert) => (
-          <article class="bg-band-dark border border-band-sea/20 rounded-lg p-6 hover:border-band-sea/50 transition-all group">
-            <!-- Date -->
-            <div class="text-band-sea font-metal text-sm uppercase tracking-wider mb-3">
-              {formatDate(concert.date)}
-            </div>
+        {upcomingConcerts.map((concert) => {
+          const date = new Date(concert.date);
+          const day = date.getDate();
+          const month = date.toLocaleDateString("es-ES", { month: "short" }).toUpperCase();
+          const year = date.getFullYear();
+          return (
+            <article class="bg-band-dark/80 backdrop-blur-sm border border-band-sea/20 rounded-lg overflow-hidden hover:border-band-sea/50 hover:shadow-[0_0_30px_rgba(0,206,209,0.15)] transition-all duration-300 group">
+              <div class="flex">
+                <!-- Date column -->
+                <div class="w-24 flex-shrink-0 bg-band-sea/10 p-4 flex flex-col items-center justify-center border-r border-band-sea/20">
+                  <span class="text-3xl font-bold text-band-sea">{day}</span>
+                  <span class="text-xs text-band-sea/80 uppercase tracking-wider">{month}</span>
+                  <span class="text-xs text-gray-500">{year}</span>
+                </div>
 
-            <!-- Venue -->
-            <h3 class="text-xl font-semibold text-white mb-1 group-hover:text-band-sea transition-colors">
-              {concert.venue}
-            </h3>
+                <!-- Content column -->
+                <div class="flex-1 p-5">
+                  <!-- Venue -->
+                  <h3 class="text-lg font-metal text-white mb-1 group-hover:text-band-sea transition-colors">
+                    {concert.venue}
+                  </h3>
 
-            <!-- City -->
-            <p class="text-gray-400 mb-4">
-              {concert.city}
-            </p>
+                  <!-- City -->
+                  <p class="text-gray-400 text-sm mb-4">
+                    {concert.city}
+                  </p>
 
-            <!-- Ticket link -->
-            {concert.ticketUrl && !concert.isSoldOut ? (
-              <a
-                href={concert.ticketUrl}
-                class="inline-flex items-center gap-2 text-sm text-band-sea hover:text-band-gold transition-colors font-semibold uppercase tracking-wider"
-              >
-                Entradas
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                </svg>
-              </a>
-            ) : concert.isSoldOut ? (
-              <span class="text-sm text-gray-500 font-semibold uppercase tracking-wider">
-                Agotado
-              </span>
-            ) : (
-              <span class="text-sm text-gray-500 font-semibold uppercase tracking-wider">
-                Próximamente
-              </span>
-            )}
-          </article>
-        ))}
+                  <!-- Ticket link -->
+                  {concert.ticketUrl && !concert.isSoldOut ? (
+                    <a
+                      href={concert.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-2 text-sm text-band-dark bg-band-sea hover:bg-band-sea/80 px-4 py-2 rounded font-semibold uppercase tracking-wider transition-colors"
+                    >
+                      Entradas
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                      </svg>
+                    </a>
+                  ) : concert.isSoldOut ? (
+                    <span class="inline-flex items-center gap-2 text-sm text-gray-500 bg-gray-800 px-4 py-2 rounded font-semibold uppercase tracking-wider">
+                      Agotado
+                    </span>
+                  ) : (
+                    <span class="inline-flex items-center gap-2 text-sm text-gray-400 border border-gray-600 px-4 py-2 rounded font-semibold uppercase tracking-wider">
+                      Próximamente
+                    </span>
+                  )}
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
     ) : (
       <div class="text-center py-8">

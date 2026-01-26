@@ -18,11 +18,13 @@ const currentPath = Astro.url.pathname;
     <div class="flex items-center justify-between">
       <!-- Logo -->
       <a href="/" class="flex items-center group">
-        <img
-          src="/images/logo/logo-horizontal.png"
-          alt="Legacy of the Seas"
-          class="h-10 sm:h-12 w-auto object-contain transition-all duration-300 group-hover:brightness-125"
-        />
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-band-dark/50 border border-band-sea/30 flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(0,206,209,0.2)] group-hover:shadow-[0_0_25px_rgba(0,206,209,0.4)] group-hover:border-band-sea/50 transition-all duration-300">
+          <img
+            src="/images/logo/logo-ls.png"
+            alt="Legacy of the Seas"
+            class="w-full h-full object-contain p-1"
+          />
+        </div>
       </a>
 
       <!-- Desktop Navigation -->

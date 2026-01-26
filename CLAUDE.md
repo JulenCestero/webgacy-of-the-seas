@@ -2,7 +2,23 @@
 
 ## Estado Actual
 
-**Última actualización**: 2026-01-25
+**Última actualización**: 2026-01-26
+
+### Cambios Recientes (2026-01-26)
+
+**Mejoras de diseño visual:**
+- **Header**: Logo LS en círculo con borde turquesa y efecto glow
+- **Hero**: Logo horizontal "Legacy of the Seas" más grande con halo de luz animado
+- **Footer**: Cambiado a logo LS circular (consistencia con header)
+- **Tarjetas de conciertos**: Nuevo diseño con fecha prominente a la izquierda y botones más visibles
+- **Tienda**: Placeholder de camiseta rediseñado (camiseta estilizada con logo LS)
+- **Scroll indicator**: Reposicionado y convertido en link funcional a sección "Escúchanos"
+
+**Distribución de logos:**
+- `logo-ls.png` → Header y Footer (icono circular)
+- `logo-horizontal.png` → Hero de la página principal (logo completo con texto)
+
+---
 
 ### Migración a Contenido Dinámico (En Progreso)
 
@@ -55,11 +71,11 @@ La web está migrando de Decap CMS + Netlify a **Cloudflare Pages + Turso + Admi
 ```
 src/
 ├── components/
-│   ├── Header.astro           # Navegación principal con menú móvil
-│   ├── Footer.astro           # Pie de página con links y redes
-│   ├── Hero.astro             # Portada con logo animado
+│   ├── Header.astro           # Navegación con logo LS circular + glow
+│   ├── Footer.astro           # Pie de página con logo LS circular
+│   ├── Hero.astro             # Portada con logo horizontal + halo animado
 │   ├── ConcertCard.astro      # Tarjeta de concierto individual
-│   ├── ConcertPreview.astro   # Preview conciertos en home
+│   ├── ConcertPreview.astro   # Preview conciertos (fecha lateral + botón destacado)
 │   ├── MemberCard.astro       # Tarjeta de miembro de la banda
 │   ├── MemberModal.astro      # Modal con biografía expandida
 │   ├── MerchCard.astro        # Tarjeta producto (con lógica stock)

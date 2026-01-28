@@ -43,9 +43,61 @@ const formattedDate = new Date(post.date).toLocaleDateString("es-ES", {
   month: "long",
   year: "numeric",
 });
+
+// Schema.org BlogPosting
+const articleSchema = {
+  "@type": "BlogPosting",
+  "headline": post.title,
+  "datePublished": post.date,
+  ...(post.updatedAt ? { "dateModified": post.updatedAt } : {}),
+  ...(post.excerpt ? { "description": post.excerpt } : {}),
+  ...(post.image ? { "image": new URL(post.image, Astro.site).toString() } : {}),
+  "author": {
+    "@type": "MusicGroup",
+    "name": "Legacy of the Seas"
+  },
+  "publisher": {
+    "@type": "MusicGroup",
+    "name": "Legacy of the Seas"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": new URL(`/archivo/${slug}`, Astro.site).toString()
+  }
+};
+
+// Schema.org BreadcrumbList
+const breadcrumbSchema = {
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": Astro.site?.toString()
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Archivo",
+      "item": new URL("/archivo", Astro.site).toString()
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": post.title
+    }
+  ]
+};
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [articleSchema, breadcrumbSchema]
+};
 ---
 
 <BaseLayout title={post.title} description={post.excerpt || `${post.title} - Legacy of the Seas`}>
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   <article class="py-16 bg-band-dark">
     <div class="container mx-auto px-4">
       <div class="max-w-3xl mx-auto">

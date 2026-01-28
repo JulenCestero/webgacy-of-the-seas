@@ -24,6 +24,15 @@ let tagline = await getSetting("tagline");
 let bookingEmail = await getSetting("bookingEmail");
 let pressEmail = await getSetting("pressEmail");
 
+// Social media
+let socialInstagram = await getSetting("socialInstagram");
+let socialFacebook = await getSetting("socialFacebook");
+let socialYoutube = await getSetting("socialYoutube");
+let socialSpotify = await getSetting("socialSpotify");
+let socialBandcamp = await getSetting("socialBandcamp");
+let socialTiktok = await getSetting("socialTiktok");
+let socialTwitter = await getSetting("socialTwitter");
+
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
@@ -35,6 +44,14 @@ if (Astro.request.method === "POST") {
       { key: "tagline", value: formData.get("tagline") as string || "" },
       { key: "bookingEmail", value: formData.get("bookingEmail") as string || "" },
       { key: "pressEmail", value: formData.get("pressEmail") as string || "" },
+      // Social media
+      { key: "socialInstagram", value: formData.get("socialInstagram") as string || "" },
+      { key: "socialFacebook", value: formData.get("socialFacebook") as string || "" },
+      { key: "socialYoutube", value: formData.get("socialYoutube") as string || "" },
+      { key: "socialSpotify", value: formData.get("socialSpotify") as string || "" },
+      { key: "socialBandcamp", value: formData.get("socialBandcamp") as string || "" },
+      { key: "socialTiktok", value: formData.get("socialTiktok") as string || "" },
+      { key: "socialTwitter", value: formData.get("socialTwitter") as string || "" },
     ];
 
     for (const setting of settingsToSave) {
@@ -65,6 +82,14 @@ if (Astro.request.method === "POST") {
     tagline = await getSetting("tagline");
     bookingEmail = await getSetting("bookingEmail");
     pressEmail = await getSetting("pressEmail");
+    // Social media
+    socialInstagram = await getSetting("socialInstagram");
+    socialFacebook = await getSetting("socialFacebook");
+    socialYoutube = await getSetting("socialYoutube");
+    socialSpotify = await getSetting("socialSpotify");
+    socialBandcamp = await getSetting("socialBandcamp");
+    socialTiktok = await getSetting("socialTiktok");
+    socialTwitter = await getSetting("socialTwitter");
   } catch (e) {
     error = "Error al guardar: " + (e as Error).message;
   }
@@ -123,6 +148,52 @@ if (Astro.request.method === "POST") {
             <label for="tagline">Tagline</label>
             <input type="text" id="tagline" name="tagline" value={tagline} placeholder="Metal desde las profundidades..." />
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social media settings -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-2a1 1 0 100 2 1 1 0 000-2z" />
+        </svg>
+        <h3>Redes Sociales</h3>
+      </div>
+      <div class="form-section-content">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="socialInstagram">Instagram</label>
+            <input type="url" id="socialInstagram" name="socialInstagram" value={socialInstagram} placeholder="https://instagram.com/..." />
+          </div>
+          <div class="form-field">
+            <label for="socialFacebook">Facebook</label>
+            <input type="url" id="socialFacebook" name="socialFacebook" value={socialFacebook} placeholder="https://facebook.com/..." />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="socialYoutube">YouTube</label>
+            <input type="url" id="socialYoutube" name="socialYoutube" value={socialYoutube} placeholder="https://youtube.com/@..." />
+          </div>
+          <div class="form-field">
+            <label for="socialSpotify">Spotify</label>
+            <input type="url" id="socialSpotify" name="socialSpotify" value={socialSpotify} placeholder="https://open.spotify.com/artist/..." />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="socialBandcamp">Bandcamp</label>
+            <input type="url" id="socialBandcamp" name="socialBandcamp" value={socialBandcamp} placeholder="https://....bandcamp.com" />
+          </div>
+          <div class="form-field">
+            <label for="socialTiktok">TikTok</label>
+            <input type="url" id="socialTiktok" name="socialTiktok" value={socialTiktok} placeholder="https://tiktok.com/@..." />
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="socialTwitter">X / Twitter</label>
+          <input type="url" id="socialTwitter" name="socialTwitter" value={socialTwitter} placeholder="https://x.com/..." />
         </div>
       </div>
     </div>

@@ -6,6 +6,11 @@ import cloudflare from "@astrojs/cloudflare";
 export default defineConfig({
   output: "server",
   adapter: cloudflare(),
-  integrations: [tailwind(), sitemap()],
-  site: "https://legacyoftheseas.com", // Actualizar cuando tengas dominio en Cloudflare
+  integrations: [
+    tailwind(),
+    sitemap({
+      filter: (page) => !page.includes('/admin/')
+    })
+  ],
+  site: "https://legacyoftheseas.pages.dev",
 });

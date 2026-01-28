@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /r2/
+
+Sitemap: https://legacyoftheseas.pages.dev/sitemap-index.xml

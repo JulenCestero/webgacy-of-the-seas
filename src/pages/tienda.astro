@@ -10,9 +10,36 @@ const db = createDb(runtimeEnv);
 
 // Get all merch items sorted by order
 const sortedMerch = await db.select().from(merch).orderBy(asc(merch.order));
+
+// Generate Product schema for each item
+const productsSchema = sortedMerch.map(item => ({
+  "@type": "Product",
+  "name": item.name,
+  "description": item.description,
+  ...(item.image ? { "image": new URL(item.image, Astro.site).toString() } : {}),
+  "brand": {
+    "@type": "Brand",
+    "name": "Legacy of the Seas"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": item.price,
+    "priceCurrency": "EUR",
+    "availability": item.buyUrl ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    ...(item.buyUrl ? { "url": item.buyUrl } : {})
+  }
+}));
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": productsSchema
+};
 ---
 
 <BaseLayout title="Tienda" description="Consigue el merchandising oficial de Legacy of the Seas. CDs, camisetas y más.">
+  {sortedMerch.length > 0 && (
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+  )}
   <!-- Hero section -->
   <section class="py-20 bg-depth-shallow">
     <div class="container mx-auto px-4 text-center">

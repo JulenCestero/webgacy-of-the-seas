@@ -37,6 +37,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:title" content={`${title} | Legacy of the Seas`} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={new URL(image, Astro.site)} />
+    <meta property="og:locale" content="es_ES" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -49,17 +50,18 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <!-- Netlify Identity Widget (for CMS authentication) -->
-    <script src="https://unpkg.com/netlify-identity-widget@1.9.2/build/netlify-identity-widget.js"></script>
+    <!-- Preconnect for Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
     <!-- Schema.org MusicGroup -->
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "MusicGroup",
       "name": "Legacy of the Seas",
-      "description": "Banda de Epic Metal de Donostia con influencias folk, symphonic y power",
+      "description": "Banda de Metal Sinfónico de Donostia con influencias folk, symphonic y power",
       "url": Astro.site?.toString(),
-      "genre": ["Epic Metal", "Folk Metal", "Symphonic Metal", "Power Metal"],
+      "genre": ["Metal Sinfónico", "Folk Metal", "Symphonic Metal", "Power Metal"],
       "foundingDate": "2010",
       "foundingLocation": {
         "@type": "Place",
@@ -83,35 +85,5 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       <slot />
     </main>
     <Footer />
-
-    <!-- Netlify Identity handler -->
-    <script is:inline>
-      function initIdentity() {
-        const identity = window.netlifyIdentity;
-        if (!identity) return;
-
-        // Redirect to admin after login or signup
-        identity.on("login", () => {
-          document.location.href = "/admin/";
-        });
-
-        // Check for invite/recovery token in URL and open modal
-        const hash = window.location.hash;
-        if (hash.includes("invite_token") || hash.includes("recovery_token") || hash.includes("confirmation_token")) {
-          identity.open();
-        }
-      }
-
-      // Run when widget is ready
-      if (window.netlifyIdentity) {
-        window.netlifyIdentity.on("init", initIdentity);
-      } else {
-        document.addEventListener("DOMContentLoaded", () => {
-          if (window.netlifyIdentity) {
-            window.netlifyIdentity.on("init", initIdentity);
-          }
-        });
-      }
-    </script>
   </body>
 </html>

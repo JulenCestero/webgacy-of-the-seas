@@ -21,9 +21,47 @@ const upcomingConcerts = await db.select().from(concerts)
 const pastConcerts = await db.select().from(concerts)
   .where(lt(concerts.date, now))
   .orderBy(desc(concerts.date));
+// Generate MusicEvent schema for upcoming concerts
+const eventsSchema = upcomingConcerts.map(concert => ({
+  "@type": "MusicEvent",
+  "name": concert.title,
+  "startDate": concert.date,
+  "location": {
+    "@type": "Place",
+    "name": concert.venue,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": concert.city
+    }
+  },
+  "performer": {
+    "@type": "MusicGroup",
+    "name": "Legacy of the Seas"
+  },
+  ...(concert.ticketUrl && !concert.isSoldOut ? {
+    "offers": {
+      "@type": "Offer",
+      "url": concert.ticketUrl,
+      "availability": "https://schema.org/InStock"
+    }
+  } : concert.isSoldOut ? {
+    "offers": {
+      "@type": "Offer",
+      "availability": "https://schema.org/SoldOut"
+    }
+  } : {})
+}));
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": eventsSchema
+};
 ---
 
 <BaseLayout title="Conciertos" description="Próximos conciertos y fechas de la gira de Legacy of the Seas. Compra tus entradas y no te pierdas el directo.">
+  {upcomingConcerts.length > 0 && (
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+  )}
   <!-- Hero section -->
   <section class="py-20 bg-band-dark-50">
     <div class="container mx-auto px-4 text-center">

@@ -29,6 +29,7 @@ if (Astro.request.method === "POST") {
     const date = formData.get("date") as string;
     const venue = formData.get("venue") as string;
     const city = formData.get("city") as string;
+    const image = formData.get("image") as string || null;
     const ticketUrl = formData.get("ticketUrl") as string || null;
     const isSoldOut = formData.get("isSoldOut") === "on";
     const description = formData.get("description") as string || null;
@@ -44,6 +45,7 @@ if (Astro.request.method === "POST") {
           date,
           venue,
           city,
+          image,
           ticketUrl,
           isSoldOut,
           description,
@@ -111,6 +113,50 @@ const formattedDate = concert.date.split('T')[0];
         <div class="form-field">
           <label for="venue">Lugar / Sala <span class="required">*</span></label>
           <input type="text" id="venue" name="venue" required value={concert.venue} placeholder="Sala Apolo, Kafe Antzokia..." />
+        </div>
+      </div>
+    </div>
+
+    <!-- Cartel del concierto -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h3>Cartel del concierto</h3>
+      </div>
+      <div class="form-section-content">
+        <input type="hidden" id="image" name="image" value={concert.image || ""} />
+        <div class="image-upload-container">
+          <div class="image-preview-wrapper">
+            {concert.image ? (
+              <img id="imagePreview" src={concert.image} class="image-preview" style="width: 200px; height: 280px;" alt="Cartel actual" />
+            ) : (
+              <div id="imagePreview" class="image-placeholder" style="width: 200px; height: 280px;">
+                <svg style="width: 48px; height: 48px; color: var(--admin-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Sin cartel</span>
+              </div>
+            )}
+          </div>
+          <div class="image-upload-actions">
+            <label class="btn btn-secondary" style="cursor: pointer;">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span id="uploadBtnText">Subir cartel</span>
+              <input type="file" id="imageFile" accept="image/*" style="display: none;" />
+            </label>
+            <button type="button" id="removeImage" class="btn btn-danger btn-sm" style={concert.image ? "" : "display: none;"}>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Eliminar
+            </button>
+          </div>
+          <p id="uploadStatus" class="upload-status"></p>
+          <small class="form-hint">Formatos: JPG, PNG, WebP. Tamaño recomendado: 800x1100px (formato cartel)</small>
         </div>
       </div>
     </div>
@@ -188,3 +234,117 @@ const formattedDate = concert.date.split('T')[0];
     </form>
   </div>
 </AdminLayout>
+
+<style>
+  .image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .image-preview {
+    width: 200px;
+    height: 280px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    border: 2px solid var(--admin-border);
+  }
+
+  .image-placeholder {
+    border-radius: 0.5rem;
+    border: 2px dashed var(--admin-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--admin-muted);
+    font-size: 0.75rem;
+  }
+
+  .image-upload-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+</style>
+
+<script>
+  const imageInput = document.getElementById('imageFile') as HTMLInputElement;
+  const imageHidden = document.getElementById('image') as HTMLInputElement;
+  const imagePreview = document.getElementById('imagePreview') as HTMLImageElement | HTMLDivElement;
+  const uploadStatus = document.getElementById('uploadStatus') as HTMLParagraphElement;
+  const uploadBtnText = document.getElementById('uploadBtnText') as HTMLSpanElement;
+  const removeBtn = document.getElementById('removeImage') as HTMLButtonElement;
+
+  imageInput?.addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    uploadBtnText.textContent = 'Subiendo...';
+    uploadStatus.textContent = '';
+    uploadStatus.style.color = 'var(--admin-muted)';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'uploads/conciertos');
+
+    try {
+      const response = await fetch('/admin/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        imageHidden.value = result.url;
+
+        // Update preview
+        if (imagePreview.tagName === 'IMG') {
+          (imagePreview as HTMLImageElement).src = result.url;
+        } else {
+          const img = document.createElement('img');
+          img.id = 'imagePreview';
+          img.src = result.url;
+          img.className = 'image-preview';
+          img.style.cssText = 'width: 200px; height: 280px;';
+          imagePreview.parentNode?.replaceChild(img, imagePreview);
+        }
+
+        removeBtn.style.display = 'inline-flex';
+        uploadStatus.textContent = 'Cartel subido correctamente';
+        uploadStatus.style.color = 'var(--admin-success)';
+      } else {
+        uploadStatus.textContent = result.error || 'Error al subir cartel';
+        uploadStatus.style.color = 'var(--admin-danger)';
+      }
+    } catch (err) {
+      uploadStatus.textContent = 'Error de conexión';
+      uploadStatus.style.color = 'var(--admin-danger)';
+    }
+
+    uploadBtnText.textContent = 'Subir cartel';
+  });
+
+  removeBtn?.addEventListener('click', () => {
+    imageHidden.value = '';
+
+    const placeholder = document.createElement('div');
+    placeholder.id = 'imagePreview';
+    placeholder.className = 'image-placeholder';
+    placeholder.style.cssText = 'width: 200px; height: 280px;';
+    placeholder.innerHTML = `
+      <svg style="width: 48px; height: 48px; color: var(--admin-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <span>Sin cartel</span>
+    `;
+
+    const currentPreview = document.getElementById('imagePreview');
+    currentPreview?.parentNode?.replaceChild(placeholder, currentPreview);
+
+    removeBtn.style.display = 'none';
+    uploadStatus.textContent = '';
+  });
+</script>

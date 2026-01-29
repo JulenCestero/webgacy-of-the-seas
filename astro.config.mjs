@@ -9,7 +9,19 @@ export default defineConfig({
   integrations: [
     tailwind(),
     sitemap({
-      filter: (page) => !page.includes('/admin/')
+      filter: (page) => !page.includes('/admin/') && !page.includes('sync-conflict'),
+      customPages: [
+        'https://legacyoftheseas.pages.dev/archivo/lanzamiento-leyendas'
+      ],
+      serialize(item) {
+        const isHome = item.url === 'https://legacyoftheseas.pages.dev/';
+        return {
+          ...item,
+          lastmod: new Date().toISOString(),
+          changefreq: isHome ? 'weekly' : 'monthly',
+          priority: isHome ? 1.0 : 0.7
+        };
+      }
     })
   ],
   site: "https://legacyoftheseas.pages.dev",

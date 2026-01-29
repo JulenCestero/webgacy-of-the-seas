@@ -22,6 +22,9 @@ dist/
 .DS_Store
 Thumbs.db
 
+# Syncthing conflicts
+*.sync-conflict-*
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

@@ -30,6 +30,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <title>{title} | Legacy of the Seas</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
+    <link rel="alternate" hreflang="es" href={canonicalURL} />
+    <link rel="alternate" hreflang="es-ES" href={canonicalURL} />
+    <link rel="alternate" hreflang="x-default" href={canonicalURL} />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />

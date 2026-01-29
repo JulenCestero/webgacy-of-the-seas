@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SocialLinks from "../components/SocialLinks.astro";
+
+const success = Astro.url.searchParams.get('success') === 'true';
 ---
 
 <BaseLayout title="Contacto" description="Contacta con Legacy of the Seas para booking, prensa o cualquier consulta. Estamos aquí para ayudarte.">
@@ -28,20 +30,24 @@ import SocialLinks from "../components/SocialLinks.astro";
             Envíanos un mensaje
           </h2>
 
+          {success && (
+            <div class="mb-6 p-4 bg-green-900/50 border border-green-500/50 rounded-lg">
+              <p class="text-green-400 font-medium">
+                ¡Mensaje enviado correctamente! Te responderemos pronto.
+              </p>
+            </div>
+          )}
+
           <form
-            name="contact"
+            action="https://api.web3forms.com/submit"
             method="POST"
-            data-netlify="true"
-            netlify-honeypot="bot-field"
             class="space-y-6"
           >
-            <!-- Honeypot for spam -->
-            <input type="hidden" name="form-name" value="contact" />
-            <p class="hidden">
-              <label>
-                No rellenar: <input name="bot-field" />
-              </label>
-            </p>
+            <input type="hidden" name="access_key" value="dc1cfcbf-751c-429b-80ec-0dba80560eea" />
+            <input type="hidden" name="subject" value="Nuevo mensaje desde legacyoftheseas.pages.dev" />
+            <input type="hidden" name="from_name" value="Legacy of the Seas Web" />
+            <input type="hidden" name="redirect" value="https://legacyoftheseas.pages.dev/contacto?success=true" />
+            <input type="checkbox" name="botcheck" class="hidden" style="display: none;" />
 
             <!-- Name -->
             <div>
@@ -73,23 +79,23 @@ import SocialLinks from "../components/SocialLinks.astro";
               />
             </div>
 
-            <!-- Subject -->
+            <!-- Asunto (para Web3Forms y UX) -->
             <div>
-              <label for="subject" class="block text-sm font-medium text-gray-300 mb-2">
+              <label for="asunto" class="block text-sm font-medium text-gray-300 mb-2">
                 Asunto *
               </label>
               <select
-                id="subject"
-                name="subject"
+                id="asunto"
+                name="asunto"
                 required
                 class="w-full px-4 py-3 bg-band-dark-100 border border-band-sea/20 rounded-lg text-white focus:outline-none focus:border-band-sea focus:ring-1 focus:ring-band-sea transition-colors"
               >
                 <option value="">Selecciona un asunto</option>
-                <option value="booking">Booking / Contratación</option>
-                <option value="prensa">Prensa / Entrevistas</option>
-                <option value="colaboracion">Colaboración</option>
-                <option value="merch">Merchandising</option>
-                <option value="otro">Otro</option>
+                <option value="Booking / Contratación">Booking / Contratación</option>
+                <option value="Prensa / Entrevistas">Prensa / Entrevistas</option>
+                <option value="Colaboración">Colaboración</option>
+                <option value="Merchandising">Merchandising</option>
+                <option value="Otro">Otro</option>
               </select>
             </div>
 

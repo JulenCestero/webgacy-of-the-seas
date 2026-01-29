@@ -1,41 +1,35 @@
 # Auditoría SEO - Legacy of the Seas
 
-**Fecha de auditoría**: 2026-01-26
-**Sitio**: https://legacyoftheseas.com
+**Fecha de auditoría**: 2026-01-29
+**Sitio**: https://legacyoftheseas.pages.dev
+**Auditoría anterior**: 2026-01-26
 
 ---
 
 ## Resumen Ejecutivo
 
-Se ha realizado una auditoría SEO completa del sitio web de Legacy of the Seas, identificando y corrigiendo múltiples áreas de mejora. Las implementaciones abarcan desde aspectos técnicos fundamentales hasta datos estructurados avanzados para rich snippets en Google.
+| Aspecto | Estado | Puntuación |
+|---------|--------|------------|
+| Crawlability | ✅ Bien | 8/10 |
+| Indexación | 🔴 Problema | 4/10 |
+| Technical SEO | ✅ Bien | 8/10 |
+| On-Page SEO | ✅ Bien | 8/10 |
+| Schema.org | ✅ Excelente | 9/10 |
+| Contenido | ⚠️ Mejorable | 6/10 |
 
-### Resultados
+### Top 5 Problemas Prioritarios
 
-| Categoría | Antes | Después |
-|-----------|-------|---------|
-| robots.txt | No existe | Configurado |
-| Sitemap | Incluye /admin/ | Filtrado correctamente |
-| H1 en homepage | No definido | sr-only para SEO |
-| og:locale | No definido | es_ES |
-| og:image | Placeholder | Logo horizontal (1200x630) |
-| Preconnect fonts | No configurado | Configurado |
-| Security headers | No configurados | _headers creado |
-| Schema MusicGroup | Implementado | Implementado |
-| Schema MusicEvent | No implementado | Implementado |
-| Schema Product | No implementado | Implementado |
-| Schema BlogPosting | No implementado | Implementado |
-| Schema BreadcrumbList | No implementado | Implementado |
-| Netlify Identity | Cargado innecesariamente | Eliminado |
-| iframe aria-label | Básico | Mejorado |
+1. **CRÍTICO**: El sitio NO está indexado en Google
+2. **ALTO**: Sitemap sin fechas `<lastmod>`
+3. **ALTO**: Posts del blog no incluidos en sitemap
+4. **ALTO**: Formulario de contacto usa Netlify Forms (no funciona en Cloudflare)
+5. **MEDIO**: Falta hreflang para contenido en español
 
 ---
 
-## Mejoras Implementadas
+## 1. Crawlability e Indexación
 
-### Fase 1: Mejoras Críticas
-
-#### 1.1 robots.txt
-**Archivo**: `public/robots.txt`
+### ✅ Robots.txt - Correcto
 
 ```txt
 User-agent: *
@@ -43,348 +37,401 @@ Allow: /
 Disallow: /admin/
 Disallow: /r2/
 
-Sitemap: https://legacyoftheseas.com/sitemap-index.xml
+Sitemap: https://legacyoftheseas.pages.dev/sitemap-index.xml
 ```
 
-**Beneficios**:
-- Bloquea el rastreo de páginas administrativas
-- Bloquea el rastreo de recursos R2 (Cloudflare)
-- Indica la ubicación del sitemap a los buscadores
+- Bloquea correctamente `/admin/` y `/r2/`
+- Referencia al sitemap correcta
 
-#### 1.2 H1 para SEO en Homepage
-**Archivo**: `src/components/Hero.astro`
+### ⚠️ Sitemap - Problemas Detectados
 
-Se ha añadido un H1 visualmente oculto (sr-only) pero accesible para buscadores y lectores de pantalla:
+**URLs actuales en sitemap (6):**
+- `/` ✅
+- `/archivo/` ✅
+- `/conciertos/` ✅
+- `/contacto/` ✅
+- `/nosotros/` ✅
+- `/tienda/` ✅
 
-```html
-<h1 class="sr-only">Legacy of the Seas - Banda de Metal Sinfónico</h1>
-```
+**Problemas identificados:**
 
-**Beneficios**:
-- Cumple con las directrices de accesibilidad WCAG
-- Proporciona contexto semántico a los buscadores
-- No afecta al diseño visual de la página
+| Problema | Impacto | Recomendación |
+|----------|---------|---------------|
+| Sin `<lastmod>` en URLs | ALTO | Añadir fechas de última modificación |
+| Posts individuales no incluidos | ALTO | `/archivo/[slug]` debe estar en sitemap |
+| Sin `<changefreq>` | BAJO | Opcional pero recomendado |
 
-#### 1.3 Filtro de Sitemap
-**Archivo**: `astro.config.mjs`
+### 🔴 Indexación - CRÍTICO
 
-```js
-sitemap({
-  filter: (page) => !page.includes('/admin/')
-})
-```
+**Estado actual**: El sitio NO aparece indexado en Google
 
-**Beneficios**:
-- El sitemap solo incluye páginas públicas
-- Mejora la eficiencia de rastreo
-- Evita indexación de páginas administrativas
+Búsqueda `site:legacyoftheseas.pages.dev` = **0 resultados**
+
+**Posibles causas:**
+1. Sitio relativamente nuevo (migrado recientemente a Cloudflare Pages)
+2. No hay backlinks externos apuntando al dominio pages.dev
+3. Google Search Console pendiente de procesar sitemap
+
+**Acciones inmediatas requeridas:**
+1. Verificar en Google Search Console que el sitemap fue procesado
+2. Solicitar indexación manual de las páginas principales
+3. Actualizar URLs en perfiles externos (Metal Archives, redes sociales)
+
+**Presencia externa actual de la banda:**
+- [Metal Archives](https://www.metal-archives.com/bands/Legacy_of_the_Seas/3540520810) - Sin link a web oficial
+- [Instagram](https://www.instagram.com/legacy.of.the.seas/)
+- [Bandcamp](https://legacy-of-the-seas.bandcamp.com/)
+- [Apple Music](https://music.apple.com/us/artist/legacy-of-the-seas/1672386882)
 
 ---
 
-### Fase 2: Mejoras Altas (Datos Estructurados)
+## 2. Technical SEO
 
-#### 2.1 MusicEvent Schema (Conciertos)
-**Archivo**: `src/pages/conciertos.astro`
+### ✅ HTTPS
+- SSL activo via Cloudflare
+- Servidor respondiendo correctamente (HTTP 200)
 
-Cada concierto próximo genera un evento estructurado:
+### ✅ Headers de Seguridad
 
-```json
-{
-  "@type": "MusicEvent",
-  "name": "Nombre del concierto",
-  "startDate": "2026-03-15",
-  "location": {
-    "@type": "Place",
-    "name": "Sala de conciertos",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Ciudad"
-    }
-  },
-  "performer": {
-    "@type": "MusicGroup",
-    "name": "Legacy of the Seas"
-  },
-  "offers": {
-    "@type": "Offer",
-    "url": "https://...",
-    "availability": "https://schema.org/InStock"
-  }
-}
+Configurados en `public/_headers`:
+
+```
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
 ```
 
-**Beneficios**:
-- Aparición en rich snippets de eventos de Google
-- Mayor visibilidad en búsquedas de conciertos
-- Información directa de disponibilidad de entradas
+### ✅ Caching
 
-#### 2.2 Product Schema (Tienda)
-**Archivo**: `src/pages/tienda.astro`
+| Recurso | Cache-Control |
+|---------|---------------|
+| JS/CSS | `max-age=31536000, immutable` |
+| Imágenes | `max-age=31536000, immutable` |
+| Sitemap | `max-age=3600` |
 
-Cada producto de merchandising tiene datos estructurados:
+### ✅ Canonical URLs
 
-```json
-{
-  "@type": "Product",
-  "name": "Camiseta Logo",
-  "description": "Camiseta oficial...",
-  "image": "https://...",
-  "brand": {
-    "@type": "Brand",
-    "name": "Legacy of the Seas"
-  },
-  "offers": {
-    "@type": "Offer",
-    "price": "25",
-    "priceCurrency": "EUR",
-    "availability": "https://schema.org/InStock"
-  }
-}
+Implementado correctamente en `BaseLayout.astro`:
+
+```javascript
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ```
 
-**Beneficios**:
-- Posibilidad de aparecer en Google Shopping
-- Rich snippets con precio y disponibilidad
-- Mayor CTR en resultados de búsqueda
-
-#### 2.3 BlogPosting Schema (Archivo/Blog)
-**Archivo**: `src/pages/archivo/[slug].astro`
-
-Cada entrada del archivo incluye:
-
-```json
-{
-  "@type": "BlogPosting",
-  "headline": "Título del post",
-  "datePublished": "2026-01-15",
-  "author": {
-    "@type": "MusicGroup",
-    "name": "Legacy of the Seas"
-  },
-  "publisher": {
-    "@type": "MusicGroup",
-    "name": "Legacy of the Seas"
-  }
-}
+```html
+<link rel="canonical" href={canonicalURL} />
 ```
 
-#### 2.4 BreadcrumbList Schema
-**Archivo**: `src/pages/archivo/[slug].astro`
+### ⚠️ Hreflang - No implementado
 
-Navegación estructurada para cada post:
+- El sitio declara `lang="es"` ✅
+- Falta `<link rel="alternate" hreflang="es-ES">` para indicar región específica
 
-```json
-{
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "position": 1, "name": "Inicio", "item": "/" },
-    { "position": 2, "name": "Archivo", "item": "/archivo" },
-    { "position": 3, "name": "Título del post" }
-  ]
-}
+**Recomendación**: Añadir en BaseLayout.astro:
+
+```html
+<link rel="alternate" hreflang="es-ES" href={canonicalURL} />
+<link rel="alternate" hreflang="x-default" href={canonicalURL} />
 ```
-
-**Beneficios**:
-- Breadcrumbs visibles en resultados de Google
-- Mejor comprensión de la estructura del sitio
-- Mayor CTR y usabilidad
 
 ---
 
-### Fase 3: Mejoras Medias
+## 3. On-Page SEO
 
-#### 3.1 Security Headers
-**Archivo**: `public/_headers`
+### Title Tags
 
-```
-/*
-  X-Frame-Options: DENY
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
+| Página | Title | Longitud | Estado |
+|--------|-------|----------|--------|
+| Home | Metal Sinfónico desde las Profundidades \| Legacy of the Seas | 58 | ✅ |
+| Conciertos | Conciertos \| Legacy of the Seas | 33 | ✅ |
+| Nosotros | Nosotros \| Legacy of the Seas | 31 | ✅ |
+| Tienda | Tienda \| Legacy of the Seas | 28 | ✅ |
+| Contacto | Contacto \| Legacy of the Seas | 30 | ✅ |
+| Archivo | Archivo \| Legacy of the Seas | 29 | ✅ |
 
-/*.js
-  Cache-Control: public, max-age=31536000, immutable
+**Veredicto**: Todos los títulos son únicos y dentro del límite óptimo (50-60 chars) ✅
 
-/*.css
-  Cache-Control: public, max-age=31536000, immutable
+### Meta Descriptions
 
-/images/*
-  Cache-Control: public, max-age=31536000, immutable
+| Página | Description | Estado |
+|--------|-------------|--------|
+| Home | Banda de Metal Sinfónico con influencias Folk y Power desde 2010. Música épica desde las profundidades del océano. | ✅ |
+| Conciertos | Próximos conciertos y fechas de la gira de Legacy of the Seas. Compra tus entradas y no te pierdas el directo. | ✅ |
+| Nosotros | Conoce a la tripulación de Legacy of the Seas. Historia, miembros e influencias de la banda de metal más épica del panorama. | ✅ |
+| Tienda | Consigue el merchandising oficial de Legacy of the Seas. CDs, camisetas y más. | ✅ |
+| Contacto | Contacta con Legacy of the Seas para booking, prensa o cualquier consulta. Estamos aquí para ayudarte. | ✅ |
+| Archivo | Historia, relatos y memorias de Legacy of the Seas. Fotos de conciertos, anécdotas y todo lo que hemos vivido. | ✅ |
 
-/uploads/*
-  Cache-Control: public, max-age=31536000, immutable
-```
+**Veredicto**: Todas las páginas tienen meta description única y descriptiva ✅
 
-**Beneficios**:
-- Protección contra clickjacking (X-Frame-Options)
-- Protección contra MIME sniffing
-- Política de referrer segura
-- Cache agresivo para assets estáticos (mejora rendimiento)
+### Heading Structure
 
-#### 3.2 Preconnect Google Fonts
-**Archivo**: `src/layouts/BaseLayout.astro`
+| Página | H1 | Jerarquía | Estado |
+|--------|-----|-----------|--------|
+| Home | Legacy of the Seas - Banda de Metal Sinfónico (sr-only) | H1 → H2 | ✅ |
+| Conciertos | Conciertos | H1 → H2 | ✅ |
+| Nosotros | La Tripulación | H1 → H2 | ✅ |
+| Tienda | Tienda | H1 → H2 | ✅ |
+| Contacto | Contacto | H1 → H2 | ✅ |
+| Archivo | Archivo | H1 → H2 | ✅ |
+| Post individual | [Título del post] | H1 → H2 | ✅ |
 
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-```
-
-**Beneficios**:
-- Reduce latencia de carga de fuentes
-- Mejora Core Web Vitals (LCP)
-- Conexión anticipada a servidores de fuentes
-
-#### 3.3 og:locale
-**Archivo**: `src/layouts/BaseLayout.astro`
-
-```html
-<meta property="og:locale" content="es_ES" />
-```
-
-**Beneficios**:
-- Indica idioma del contenido a redes sociales
-- Mejor targeting para usuarios hispanohablantes
-- Requisito para Open Graph completo
-
-#### 3.4 Eliminación Netlify Identity Widget
-**Archivo**: `src/layouts/BaseLayout.astro`
-
-Se ha eliminado el script de Netlify Identity que ya no se usa (migrado a Cloudflare Access).
-
-**Beneficios**:
-- Reduce tamaño de página (~50KB menos)
-- Elimina peticiones HTTP innecesarias
-- Mejora tiempo de carga inicial
+**Veredicto**: Estructura de headings correcta en todas las páginas ✅
 
 ---
 
-### Fase 4: Mejoras Bajas (Accesibilidad)
+## 4. Schema.org (Structured Data)
 
-#### 4.1 Aria-label en iframe de Spotify
-**Archivo**: `src/components/SpotifyEmbed.astro`
+### Implementación Excelente ✅
 
-```html
-<iframe
-  title="Reproductor de Spotify - Legacy of the Seas"
-  aria-label="Reproductor de Spotify con la música de Legacy of the Seas"
-  ...
-/>
-```
+| Página | Schemas Implementados |
+|--------|----------------------|
+| Todas las páginas | MusicGroup (en BaseLayout) |
+| Home | + VideoObject (YouTube embed) |
+| Conciertos | + MusicEvent[] (cada concierto) |
+| Tienda | + Product[] (cada producto) |
+| Archivo/[slug] | + BlogPosting + BreadcrumbList |
 
-#### 4.2 Alt text en Lightbox
-**Archivo**: `src/components/Lightbox.astro`
+### MusicGroup Schema (Global)
 
-Se ha mejorado el alt text por defecto de las imágenes en la galería.
-
----
-
-## Datos Estructurados Existentes
-
-El sitio ya contaba con estos schemas (implementados previamente):
-
-### MusicGroup (BaseLayout.astro)
 ```json
 {
   "@type": "MusicGroup",
   "name": "Legacy of the Seas",
-  "description": "Banda de Epic Metal de Donostia...",
-  "genre": ["Epic Metal", "Folk Metal", "Symphonic Metal", "Power Metal"],
+  "description": "Banda de Metal Sinfónico de Donostia con influencias folk, symphonic y power",
+  "url": "https://legacyoftheseas.pages.dev",
+  "genre": ["Metal Sinfónico", "Folk Metal", "Symphonic Metal", "Power Metal"],
   "foundingDate": "2010",
+  "foundingLocation": {
+    "@type": "Place",
+    "name": "Donostia, Euskadi, España"
+  },
   "sameAs": [
     "https://instagram.com/legacy.of.the.seas",
     "https://www.facebook.com/legacy.of.the.seas/",
-    ...
+    "https://www.youtube.com/@legacyoftheseas",
+    "https://open.spotify.com/artist/0VfU5iDeWVTKfvhyos3Sih",
+    "https://legacy-of-the-seas.bandcamp.com/",
+    "https://tiktok.com/@legacy.of.the.seas",
+    "https://x.com/legacyoftheseas"
   ]
 }
 ```
 
----
+### MusicEvent Schema (Conciertos)
 
-## Checklist de Verificación Post-Deploy
+Cada concierto próximo genera:
+- name, startDate, location ✅
+- performer (MusicGroup) ✅
+- offers con availability (InStock/SoldOut) ✅
 
-### Archivos Creados
-- [ ] `public/robots.txt` - Verificar en https://legacyoftheseas.com/robots.txt
-- [ ] `public/_headers` - Verificar headers con curl o DevTools
+### Product Schema (Tienda)
 
-### Sitemap
-- [ ] Acceder a https://legacyoftheseas.com/sitemap-index.xml
-- [ ] Verificar que NO incluye /admin/*
-- [ ] Enviar sitemap a Google Search Console
+Cada producto incluye:
+- name, description, image ✅
+- brand (Legacy of the Seas) ✅
+- offers con price, priceCurrency, availability ✅
 
-### Datos Estructurados
-- [ ] [Google Rich Results Test](https://search.google.com/test/rich-results)
-  - [ ] Verificar MusicGroup en homepage
-  - [ ] Verificar MusicEvent en /conciertos
-  - [ ] Verificar Product en /tienda
-  - [ ] Verificar BlogPosting en /archivo/*
+### BlogPosting + BreadcrumbList (Posts)
 
-### Open Graph
-- [ ] [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
-  - [ ] Verificar og:locale = es_ES
-  - [ ] Verificar og:image carga correctamente
-
-### Rendimiento
-- [ ] [PageSpeed Insights](https://pagespeed.web.dev/)
-  - [ ] Verificar mejora en LCP (preconnect)
-  - [ ] Verificar mejora en tamaño de página (sin Netlify Identity)
-
-### Seguridad
-- [ ] [Security Headers](https://securityheaders.com/)
-  - [ ] Verificar X-Frame-Options
-  - [ ] Verificar X-Content-Type-Options
-  - [ ] Verificar Referrer-Policy
+Cada post del archivo incluye:
+- headline, datePublished, dateModified ✅
+- author, publisher ✅
+- mainEntityOfPage ✅
+- BreadcrumbList (Inicio → Archivo → Post) ✅
 
 ---
 
-## Herramientas Recomendadas
+## 5. Open Graph & Social
 
-### Monitoreo SEO
-- **Google Search Console**: Monitorizar indexación y errores
-- **Bing Webmaster Tools**: Cobertura adicional
-- **Ahrefs/SEMrush**: Análisis de backlinks y keywords
+### Implementación Correcta ✅
 
-### Validación Técnica
-- **Lighthouse**: Auditoría integrada en Chrome DevTools
-- **Schema Markup Validator**: https://validator.schema.org/
-- **Mobile-Friendly Test**: https://search.google.com/test/mobile-friendly
+```html
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{canonicalURL}" />
+<meta property="og:title" content="{title} | Legacy of the Seas" />
+<meta property="og:description" content="{description}" />
+<meta property="og:image" content="/og-image.jpg" />
+<meta property="og:locale" content="es_ES" />
 
-### Rendimiento
-- **WebPageTest**: Análisis detallado de carga
-- **GTmetrix**: Historial de rendimiento
-- **Core Web Vitals Report**: En Search Console
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{title} | Legacy of the Seas" />
+<meta name="twitter:description" content="{description}" />
+<meta name="twitter:image" content="/og-image.jpg" />
+```
 
----
-
-## Próximos Pasos Recomendados
-
-### Corto Plazo
-1. ~~**Crear og-image.jpg**: Imagen OG personalizada (1200x630px)~~ COMPLETADO
-2. **Verificar en Search Console**: Enviar sitemap y solicitar indexación
-3. **Configurar Google Analytics 4**: Tracking de conversiones
-
-### Medio Plazo
-1. **Contenido del blog**: Publicar regularmente en /archivo
-2. **Link building**: Conseguir enlaces desde blogs de metal/música
-3. **Local SEO**: Optimizar para búsquedas locales (Donostia)
-
-### Largo Plazo
-1. **Internacionalización**: Versión en euskera/inglés
-2. **PWA**: Convertir en Progressive Web App
-3. **AMP**: Versiones AMP para artículos del blog
+- og:image existe: `public/og-image.jpg` ✅
+- og:locale configurado: `es_ES` ✅
+- Twitter Cards: `summary_large_image` ✅
 
 ---
 
-## Notas Técnicas
+## 6. Contenido
 
-### Compatibilidad
-- Todos los schemas usan vocabulario de Schema.org v26.0
-- Headers compatibles con Cloudflare Pages
-- Preconnect soportado en todos los navegadores modernos
+### Estado Actual
 
-### Mantenimiento
-- Los schemas se generan dinámicamente desde la base de datos
-- No requieren actualización manual
-- Se actualizan automáticamente con los datos
+| Sección | Items | Evaluación |
+|---------|-------|------------|
+| Posts (Archivo) | 1 | ⚠️ Muy poco contenido |
+| Productos | 2 | ⚠️ Poco contenido |
+| Conciertos | 4 (1 futuro, 3 pasados) | ✅ OK |
+| Miembros | 4 | ✅ OK |
+
+### Recomendaciones de Contenido
+
+1. **Blog/Archivo**: Crear posts regulares
+   - Crónicas de cada concierto
+   - Proceso de grabación del álbum
+   - Historias detrás de las canciones
+   - Entrevistas y apariciones en prensa
+
+2. **Discografía**: Crear página dedicada
+   - Letras de canciones (muy bueno para SEO)
+   - Credits de cada disco
+   - Enlaces a plataformas de streaming
+
+3. **Páginas de miembros individuales**: Expandir biografías
+   - Equipamiento
+   - Influencias personales
+   - Proyectos paralelos
+
+---
+
+## 7. Problemas Críticos a Resolver
+
+### 🔴 Formulario de Contacto No Funcional
+
+**Archivo**: `src/pages/contacto.astro`
+
+```html
+<form
+  name="contact"
+  method="POST"
+  data-netlify="true"        <!-- ❌ No funciona en Cloudflare -->
+  netlify-honeypot="bot-field"
+>
+```
+
+**Problema**: El formulario usa atributos de Netlify Forms pero el sitio está en Cloudflare Pages.
+
+**Soluciones posibles**:
+1. Implementar Cloudflare Pages Function para procesar el formulario
+2. Usar servicio externo (Formspree, EmailJS, Web3Forms)
+3. Implementar envío directo por email con API
+
+### 🔴 Sitio No Indexado
+
+**Acciones inmediatas**:
+1. Acceder a Google Search Console
+2. Verificar estado del sitemap enviado
+3. Solicitar indexación manual de páginas principales
+4. Esperar 24-48h y volver a verificar
+
+---
+
+## Plan de Acción Priorizado
+
+### 🔴 Crítico (Esta semana)
+
+| Acción | Responsable | Estado |
+|--------|-------------|--------|
+| Verificar Google Search Console | - | ⬜ Pendiente |
+| Arreglar formulario de contacto | Dev | ⬜ Pendiente |
+| Solicitar indexación manual | - | ⬜ Pendiente |
+
+### 🟠 Alto (Próximas 2 semanas)
+
+| Acción | Responsable | Estado |
+|--------|-------------|--------|
+| Añadir `<lastmod>` al sitemap | Dev | ⬜ Pendiente |
+| Incluir posts en sitemap | Dev | ⬜ Pendiente |
+| Actualizar Metal Archives con URL web | Banda | ⬜ Pendiente |
+| Añadir hreflang tags | Dev | ⬜ Pendiente |
+
+### 🟡 Medio (Próximo mes)
+
+| Acción | Responsable | Estado |
+|--------|-------------|--------|
+| Crear más contenido en Archivo | Banda | ⬜ Pendiente |
+| Crear página de discografía | Dev | ⬜ Pendiente |
+| Añadir letras de canciones | Banda | ⬜ Pendiente |
+
+---
+
+## Mejoras Técnicas Sugeridas
+
+### Sitemap con lastmod
+
+Modificar `astro.config.mjs`:
+
+```javascript
+sitemap({
+  filter: (page) => !page.includes('/admin/'),
+  serialize(item) {
+    return {
+      ...item,
+      lastmod: new Date().toISOString(),
+      changefreq: 'weekly',
+      priority: item.url === '/' ? 1.0 : 0.8
+    };
+  }
+})
+```
+
+### Hreflang Tags
+
+Añadir en `BaseLayout.astro`:
+
+```html
+<link rel="alternate" hreflang="es-ES" href={canonicalURL} />
+<link rel="alternate" hreflang="x-default" href={canonicalURL} />
+```
+
+### Formulario con Formspree (ejemplo)
+
+```html
+<form action="https://formspree.io/f/{form-id}" method="POST">
+  <input type="text" name="name" required />
+  <input type="email" name="email" required />
+  <textarea name="message" required></textarea>
+  <button type="submit">Enviar</button>
+</form>
+```
+
+---
+
+## Keywords Objetivo
+
+| Keyword | Vol. Est. | Dificultad | Página Target |
+|---------|-----------|------------|---------------|
+| legacy of the seas | Bajo | Baja | Home |
+| legacy of the seas band | Bajo | Baja | Nosotros |
+| legacy of the seas metal | Bajo | Baja | Home |
+| metal sinfonico donostia | Muy bajo | Muy baja | Home |
+| metal sinfonico euskadi | Muy bajo | Muy baja | Home |
+| leyendas de una eternidad album | Muy bajo | Muy baja | Tienda |
+| leyendas de una eternidad legacy | Muy bajo | Muy baja | Archivo |
+
+---
+
+## Herramientas de Monitoreo
+
+### Obligatorias
+- [Google Search Console](https://search.google.com/search-console) - Indexación y errores
+- [Google Rich Results Test](https://search.google.com/test/rich-results) - Validar schemas
+
+### Recomendadas
+- [PageSpeed Insights](https://pagespeed.web.dev/) - Core Web Vitals
+- [Schema Markup Validator](https://validator.schema.org/) - Validar JSON-LD
+- [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) - Verificar OG tags
+
+---
+
+## Historial de Auditorías
+
+| Fecha | Cambios Principales |
+|-------|---------------------|
+| 2026-01-26 | Auditoría inicial, implementación de schemas, robots.txt, headers |
+| 2026-01-29 | Auditoría de seguimiento, detectado problema de indexación y formulario |
 
 ---
 

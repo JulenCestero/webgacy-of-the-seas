@@ -327,6 +327,12 @@ Ver `docs/seo-audit.md` para el informe completo.
 Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ```
 
+### Git Push
+El repositorio usa HTTPS. Para hacer push, usar el token de `.envrc`:
+```bash
+source .envrc && git push https://${GH_TOKEN}@github.com/JulenCestero/webgacy-of-the-seas.git master
+```
+
 ### Optimización imágenes
 - Usar `npx sharp` para comprimir
 - Productos: 600x600px, JPG, ~80KB

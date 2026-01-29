@@ -21,6 +21,9 @@ async function getSetting(key: string): Promise<string | null> {
 }
 
 const youtubeUrl = await getSetting("youtubeVideoUrl");
+const youtubeTitle = await getSetting("youtubeVideoTitle") || "Legacy of the Seas - Videoclip Oficial";
+const youtubeDescription = await getSetting("youtubeVideoDescription") || "Videoclip oficial de Legacy of the Seas, banda de Metal Sinfónico con influencias Folk y Power desde Donostia";
+const youtubeUploadDate = await getSetting("youtubeVideoUploadDate") || "2024-10-04";
 const spotifyUri = await getSetting("spotifyAlbumUri");
 ---
 
@@ -44,7 +47,12 @@ const spotifyUri = await getSetting("spotifyAlbumUri");
         <!-- YouTube videoclip -->
         {youtubeUrl && (
           <div class="mb-8">
-            <YouTubeEmbed videoUrl={youtubeUrl} title="Legacy of the Seas - Videoclip" />
+            <YouTubeEmbed
+              videoUrl={youtubeUrl}
+              title={youtubeTitle}
+              description={youtubeDescription}
+              uploadDate={youtubeUploadDate}
+            />
           </div>
         )}
 

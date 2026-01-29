@@ -2,9 +2,16 @@
 interface Props {
   videoUrl: string;
   title?: string;
+  description?: string;
+  uploadDate?: string;
 }
 
-const { videoUrl, title = "Video de Legacy of the Seas" } = Astro.props;
+const {
+  videoUrl,
+  title = "Video de Legacy of the Seas",
+  description = "Videoclip oficial de Legacy of the Seas, banda de Metal Sinfónico",
+  uploadDate = "2024-01-01"
+} = Astro.props;
 
 // Extract video ID from various YouTube URL formats
 function getYouTubeId(url: string): string | null {
@@ -22,6 +29,27 @@ function getYouTubeId(url: string): string | null {
 
 const videoId = getYouTubeId(videoUrl);
 const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+const watchUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : null;
+
+const videoSchema = videoId ? {
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  "name": title,
+  "description": description,
+  "thumbnailUrl": thumbnailUrl,
+  "uploadDate": uploadDate,
+  "contentUrl": watchUrl,
+  "embedUrl": embedUrl,
+  "publisher": {
+    "@type": "Organization",
+    "name": "Legacy of the Seas",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://legacyoftheseas.pages.dev/images/logo/logo-ls.png"
+    }
+  }
+} : null;
 ---
 
 {embedUrl && (
@@ -36,5 +64,8 @@ const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
         allowfullscreen
       ></iframe>
     </div>
+    {videoSchema && (
+      <script type="application/ld+json" set:html={JSON.stringify(videoSchema)} />
+    )}
   </div>
 )}

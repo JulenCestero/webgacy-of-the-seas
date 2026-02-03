@@ -24,8 +24,10 @@ const pastConcerts = await db.select().from(concerts)
 // Generate MusicEvent schema for upcoming concerts
 const eventsSchema = upcomingConcerts.map(concert => ({
   "@type": "MusicEvent",
+  "@id": new URL(`/conciertos#event-${concert.id}`, Astro.site).toString(),
   "name": concert.title,
   "startDate": concert.date,
+  "endDate": concert.date,
   "location": {
     "@type": "Place",
     "name": concert.venue,

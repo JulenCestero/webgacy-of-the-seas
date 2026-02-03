@@ -85,7 +85,8 @@ const breadcrumbSchema = {
     {
       "@type": "ListItem",
       "position": 3,
-      "name": post.title
+      "name": post.title,
+      "item": new URL(`/archivo/${slug}`, Astro.site).toString()
     }
   ]
 };

@@ -5,7 +5,17 @@ import cloudflare from "@astrojs/cloudflare";
 
 export default defineConfig({
   output: "server",
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    routes: {
+      extend: {
+        exclude: [
+          { pattern: "/sitemap-index.xml" },
+          { pattern: "/sitemap-0.xml" },
+          { pattern: "/robots.txt" },
+        ],
+      },
+    },
+  }),
   integrations: [
     tailwind(),
     sitemap({

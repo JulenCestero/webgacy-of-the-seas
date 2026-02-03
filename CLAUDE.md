@@ -14,6 +14,14 @@
 - VideoObject uploadDate corregido a formato ISO 8601 con timezone (+01:00)
 - Favicons cambiados a logo LS original (transparente) en lugar de cyan
 
+**Correcciones SEO adicionales (auditoría):**
+- H1 visible en Homepage - Logo envuelto en H1 en vez de sr-only
+- Página 404 personalizada con branding y navegación
+- BreadcrumbList completo con URL en último elemento
+- MusicEvent schema con @id único y endDate
+- Product schema con @id, sku, url
+- Footer con enlace a /tienda añadido
+
 ### Cambios Anteriores (2026-01-26)
 
 **Mejoras de diseño visual:**

@@ -14,8 +14,11 @@ const sortedMerch = await db.select().from(merch).orderBy(asc(merch.order));
 // Generate Product schema for each item
 const productsSchema = sortedMerch.map(item => ({
   "@type": "Product",
+  "@id": new URL(`/tienda#product-${item.id}`, Astro.site).toString(),
   "name": item.name,
   "description": item.description,
+  "sku": `LOTS-${item.id}`,
+  "url": new URL("/tienda", Astro.site).toString(),
   ...(item.image ? { "image": new URL(item.image, Astro.site).toString() } : {}),
   "brand": {
     "@type": "Brand",

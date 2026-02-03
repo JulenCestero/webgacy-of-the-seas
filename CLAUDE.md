@@ -2,9 +2,19 @@
 
 ## Estado Actual
 
-**Última actualización**: 2026-01-26
+**Última actualización**: 2026-02-03
 
-### Cambios Recientes (2026-01-26)
+### Cambios Recientes (2026-02-03)
+
+**Correcciones SEO para Google Search:**
+- Eliminado meta generator que mostraba "Cloudflare" como nombre del sitio
+- Añadido Schema.org WebSite con nombre correcto
+- Título home: "Legacy of the Seas - Metal Sinfónico"
+- Descripción: "Banda de Metal Sinfónico desde Donostia. Música épica desde las profundidades del océano."
+- VideoObject uploadDate corregido a formato ISO 8601 con timezone (+01:00)
+- Favicons cambiados a logo LS original (transparente) en lugar de cyan
+
+### Cambios Anteriores (2026-01-26)
 
 **Mejoras de diseño visual:**
 - **Header**: Logo LS en círculo con borde turquesa y efecto glow
@@ -302,9 +312,10 @@ TURSO_AUTH_TOKEN=eyJ...
 - `robots.txt` - Bloquea /admin/ y /r2/
 - `_headers` - Security headers + cache para Cloudflare
 - `og-image.jpg` - Logo horizontal 1200x630px
-- Schema.org: MusicGroup, MusicEvent, Product, BlogPosting, BreadcrumbList
+- Schema.org: WebSite, MusicGroup, MusicEvent, Product, BlogPosting, BreadcrumbList, VideoObject
 - Preconnect Google Fonts
 - og:locale es_ES
+- Favicons: Logo LS original (transparente, no cyan)
 
 ### Documentación
 Ver `docs/seo-audit.md` para el informe completo.
@@ -318,9 +329,19 @@ Ver `docs/seo-audit.md` para el informe completo.
 ### TODO (2026-01-27)
 - [ ] Solicitar re-indexación en Google Search Console (esperar a mañana, límite de solicitudes alcanzado)
 
+### Notas sobre vídeos embebidos
+Google Search Console muestra el aviso "El vídeo no está en una página de visualización" para el YouTube embebido en la homepage. Esto es **comportamiento esperado** y no un error:
+- Google solo indexa vídeos como "resultados de vídeo" si están en una página dedicada donde el vídeo es el contenido principal
+- Un vídeo embebido en la homepage (junto con Spotify, conciertos, newsletter...) no cumple este criterio
+- El VideoObject schema está correctamente implementado con uploadDate en formato ISO 8601 con timezone
+- **Decisión**: Dejarlo así. El vídeo se ve bien en la web y la gente lo encuentra en YouTube directamente
+
 ---
 
 ## Notas Técnicas
+
+### Documentación
+Para buscar información de documentación de librerías/frameworks, usar primero **context7** (MCP server) antes de buscar en la web.
 
 ### Commits
 ```

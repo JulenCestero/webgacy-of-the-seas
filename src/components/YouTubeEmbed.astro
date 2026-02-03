@@ -32,13 +32,19 @@ const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null;
 const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
 const watchUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : null;
 
+// Format uploadDate to ISO 8601 with timezone (required by Google)
+function formatUploadDate(dateStr: string): string {
+  if (dateStr.includes('T')) return dateStr; // Already formatted
+  return `${dateStr}T00:00:00+01:00`; // Add time and Europe/Madrid timezone
+}
+
 const videoSchema = videoId ? {
   "@context": "https://schema.org",
   "@type": "VideoObject",
   "name": title,
   "description": description,
   "thumbnailUrl": thumbnailUrl,
-  "uploadDate": uploadDate,
+  "uploadDate": formatUploadDate(uploadDate),
   "contentUrl": watchUrl,
   "embedUrl": embedUrl,
   "publisher": {

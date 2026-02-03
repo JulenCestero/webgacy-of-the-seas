@@ -24,8 +24,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="generator" content={Astro.generator} />
-
     <!-- SEO -->
     <title>{title} | Legacy of the Seas</title>
     <meta name="description" content={description} />
@@ -56,6 +54,18 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <!-- Preconnect for Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Schema.org WebSite -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Legacy of the Seas",
+      "url": Astro.site?.toString(),
+      "publisher": {
+        "@type": "MusicGroup",
+        "name": "Legacy of the Seas"
+      }
+    })} />
 
     <!-- Schema.org MusicGroup -->
     <script type="application/ld+json" set:html={JSON.stringify({

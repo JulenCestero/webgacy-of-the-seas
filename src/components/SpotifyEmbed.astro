@@ -2,77 +2,63 @@
 interface Props {
   spotifyUri: string;
   height?: number;
-  theme?: "dark" | "light";
 }
 
-const { spotifyUri, height = 352, theme = "dark" } = Astro.props;
+const { spotifyUri, height = 352 } = Astro.props;
 
-// Convert Spotify URI to embed URL
-// Supports: spotify:album:xxx, spotify:track:xxx, spotify:artist:xxx, spotify:playlist:xxx
-// Or direct URLs: https://open.spotify.com/album/xxx
-function getEmbedUrl(uri: string): string {
-  // If it's already a URL
-  if (uri.startsWith("https://open.spotify.com/")) {
-    const parts = uri.replace("https://open.spotify.com/", "").split("/");
-    const type = parts[0];
-    const id = parts[1]?.split("?")[0];
-    return `https://open.spotify.com/embed/${type}/${id}?utm_source=generator&theme=${theme === "dark" ? "0" : "1"}`;
+function getEmbedUrl(uri: string): string | null {
+  const uriMatch = uri.match(/^spotify:(album|track|artist|playlist):([a-zA-Z0-9]+)$/);
+  if (uriMatch) {
+    return `https://open.spotify.com/embed/${uriMatch[1]}/${uriMatch[2]}?utm_source=generator&theme=0`;
   }
-
-  // If it's a Spotify URI (spotify:album:xxx)
-  if (uri.startsWith("spotify:")) {
-    const parts = uri.split(":");
-    const type = parts[1];
-    const id = parts[2];
-    return `https://open.spotify.com/embed/${type}/${id}?utm_source=generator&theme=${theme === "dark" ? "0" : "1"}`;
+  const urlMatch = uri.match(/open\.spotify\.com\/(album|track|artist|playlist)\/([a-zA-Z0-9]+)/);
+  if (urlMatch) {
+    return `https://open.spotify.com/embed/${urlMatch[1]}/${urlMatch[2]}?utm_source=generator&theme=0`;
   }
-
-  // Fallback - assume it's just an ID and type album
-  return `https://open.spotify.com/embed/album/${uri}?utm_source=generator&theme=${theme === "dark" ? "0" : "1"}`;
+  return null;
 }
 
 const embedUrl = getEmbedUrl(spotifyUri);
 ---
 
-<div class="spotify-embed-container">
-  <iframe
-    style={`border-radius:12px; height:${height}px;`}
-    src={embedUrl}
-    width="100%"
-    height={height}
-    frameBorder="0"
-    allowfullscreen=""
-    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-    loading="lazy"
-    title="Reproductor de Spotify - Legacy of the Seas"
-    aria-label="Reproductor de Spotify con la música de Legacy of the Seas"
-  ></iframe>
+{embedUrl && (
+  <div class="spotify-embed">
+    <button
+      class="spotify-facade w-full border-0 cursor-pointer bg-[#121212] rounded-xl overflow-hidden group"
+      data-embed-url={embedUrl}
+      data-height={height}
+      aria-label="Cargar reproductor de Spotify"
+      style={`height: ${height}px;`}
+    >
+      <div class="flex flex-col items-center justify-center h-full gap-4 px-8">
+        <svg class="w-12 h-12 text-[#1DB954] group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+        </svg>
+        <span class="text-white text-sm font-medium">Escuchar en Spotify</span>
+        <span class="text-gray-400 text-xs">Haz clic para cargar el reproductor</span>
+      </div>
+    </button>
+  </div>
+)}
 
-  <!-- Fallback for when iframe doesn't load -->
-  <noscript>
-    <div class="bg-band-dark-100 border border-band-gold/20 rounded-lg p-6 text-center">
-      <p class="text-gray-400 mb-4">
-        Habilita JavaScript para ver el reproductor de Spotify
-      </p>
-      <a
-        href={spotifyUri.startsWith("https://") ? spotifyUri : `https://open.spotify.com`}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="btn-primary inline-flex items-center gap-2"
-      >
-        Abrir en Spotify
-      </a>
-    </div>
-  </noscript>
-</div>
-
-<style>
-  .spotify-embed-container {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .spotify-embed-container iframe {
-    width: 100%;
-  }
-</style>
+<script>
+  document.querySelectorAll('.spotify-facade').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const embedUrl = this.getAttribute('data-embed-url');
+      const height = this.getAttribute('data-height') || '352';
+      if (!embedUrl) return;
+      const iframe = document.createElement('iframe');
+      iframe.style.borderRadius = '12px';
+      iframe.style.height = height + 'px';
+      iframe.src = embedUrl;
+      iframe.width = '100%';
+      iframe.height = height;
+      iframe.setAttribute('frameBorder', '0');
+      iframe.setAttribute('allowfullscreen', '');
+      iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+      iframe.setAttribute('loading', 'lazy');
+      iframe.title = 'Reproductor de Spotify - Legacy of the Seas';
+      this.replaceWith(iframe);
+    });
+  });
+</script>

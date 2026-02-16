@@ -58,20 +58,49 @@ const videoSchema = videoId ? {
 } : null;
 ---
 
-{embedUrl && (
+{embedUrl && thumbnailUrl && (
   <div class="youtube-embed rounded-lg overflow-hidden shadow-2xl shadow-black/50 border border-band-sea/20">
     <div class="relative w-full" style="padding-bottom: 56.25%;">
-      <iframe
-        src={embedUrl}
-        title={title}
-        class="absolute inset-0 w-full h-full"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-      ></iframe>
+      <button
+        class="youtube-facade absolute inset-0 w-full h-full border-0 cursor-pointer bg-black group"
+        data-embed-url={embedUrl}
+        aria-label={`Reproducir: ${title}`}
+      >
+        <img
+          src={thumbnailUrl}
+          alt={title}
+          loading="lazy"
+          class="absolute inset-0 w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="w-16 h-16 md:w-20 md:h-20 bg-red-600 group-hover:bg-red-500 rounded-xl flex items-center justify-center transition-colors shadow-lg">
+            <svg class="w-8 h-8 md:w-10 md:h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </div>
+      </button>
     </div>
     {videoSchema && (
       <script type="application/ld+json" set:html={JSON.stringify(videoSchema)} />
     )}
   </div>
 )}
+
+<script>
+  document.querySelectorAll('.youtube-facade').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const embedUrl = this.getAttribute('data-embed-url');
+      const container = this.parentElement;
+      if (!container || !embedUrl) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = embedUrl + '?autoplay=1';
+      iframe.title = this.getAttribute('aria-label')?.replace('Reproducir: ', '') || '';
+      iframe.className = 'absolute inset-0 w-full h-full';
+      iframe.setAttribute('frameborder', '0');
+      iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+      iframe.setAttribute('allowfullscreen', '');
+      this.replaceWith(iframe);
+    });
+  });
+</script>

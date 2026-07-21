@@ -12,16 +12,14 @@ export async function GET(context: APIContext): Promise<Response> {
     updatedAt: posts.updatedAt,
   }).from(posts);
 
-  const buildLastmod = new Date().toISOString();
-
-  const staticPages = [
+  const staticPages: Array<{ loc: string; changefreq: string; priority: string; lastmod?: string }> = [
     { loc: "/", changefreq: "weekly", priority: "1.0" },
     { loc: "/conciertos/", changefreq: "weekly", priority: "0.8" },
     { loc: "/nosotros/", changefreq: "monthly", priority: "0.7" },
     { loc: "/tienda/", changefreq: "monthly", priority: "0.7" },
     { loc: "/archivo/", changefreq: "weekly", priority: "0.8" },
     { loc: "/contacto/", changefreq: "monthly", priority: "0.5" },
-  ].map((page) => ({ ...page, lastmod: buildLastmod }));
+  ];
 
   const postEntries = allPosts.map((post) => {
     const rawDate = post.updatedAt || post.date;
@@ -30,7 +28,7 @@ export async function GET(context: APIContext): Promise<Response> {
       loc: `/archivo/${post.slug}/`,
       changefreq: "monthly" as const,
       priority: "0.6",
-      lastmod: isNaN(parsed.getTime()) ? buildLastmod : parsed.toISOString(),
+      lastmod: isNaN(parsed.getTime()) ? undefined : parsed.toISOString(),
     };
   });
 
@@ -39,8 +37,7 @@ export async function GET(context: APIContext): Promise<Response> {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${allUrls.map((u) => `  <url>
-    <loc>${site}${u.loc}</loc>
-    <lastmod>${u.lastmod}</lastmod>
+    <loc>${site}${u.loc}</loc>${u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : ""}
     <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>
   </url>`).join("\n")}

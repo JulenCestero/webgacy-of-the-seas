@@ -26,9 +26,15 @@ Schema.org).
 
 **Changed this run:**
 1. **Sitemap `<lastmod>`** (`src/pages/sitemap.xml.ts`) — added `<lastmod>`
-   to every URL. Static pages use build time; post entries use
-   `updatedAt || date`. This was flagged as a HIGH-priority gap in the
-   2026-01-29 audit and was never actioned.
+   to post entries only, sourced from real DB timestamps
+   (`updatedAt || date`). This was flagged as a HIGH-priority gap in the
+   2026-01-29 audit and was never actioned. Deliberately did NOT add
+   `lastmod` to the 6 static pages — there's no real per-page modification
+   timestamp for them, and a code-review pass caught that computing it as
+   `new Date()` at request time would make it change every render, which
+   Google's own guidance says is worse than omitting the field (crawlers
+   distrust a lastmod that always reads "now"). Omitting it there is more
+   honest than faking one.
 2. **Internal link: archivo post → conciertos**
    (`src/pages/archivo/[slug].astro`) — added a footer CTA linking to
    `/conciertos`. Closes the "internal linking between /archivo posts and

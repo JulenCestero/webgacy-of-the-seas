@@ -28,6 +28,8 @@ const eventsSchema = upcomingConcerts.map(concert => ({
   "name": concert.title,
   "startDate": concert.date,
   "endDate": concert.date,
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
   "location": {
     "@type": "Place",
     "name": concert.venue,

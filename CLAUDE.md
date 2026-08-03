@@ -331,11 +331,14 @@ Ver `docs/seo-audit.md` para el informe completo.
 ### Google Search Console
 - **Propiedad verificada**: `https://legacyoftheseas.pages.dev/`
 - **Archivo verificación**: `public/google5e9217c10aa451ce.html`
-- **Sitemaps enviados**: `sitemap-index.xml`, `sitemap-0.xml` (pendiente de procesar)
-- **Estado**: Página indexada, pendiente re-indexar para actualizar canónica a pages.dev
+- **Sitemap real**: `/sitemap.xml` (generado por `src/pages/sitemap.xml.ts`, HTTP 200, referenciado correctamente en `robots.txt`). `sitemap-index.xml` y `sitemap-0.xml` **no existen** (404) — quedaron documentados por error, nunca hubo integración `@astrojs/sitemap`.
+- **Estado de indexación (verificado 2026-08-03 vía API)**: **2/7 indexadas** — `/` y `/contacto` (sin barra final). Las otras 5 (`/conciertos`, `/nosotros`, `/tienda`, `/archivo`, `/archivo/2024-10-04-...`) están **"URL is unknown to Google"**: no rastreadas-y-descartadas, sino nunca vistas.
+- **La barra final importa** (comprobado consultando ambas variantes): `/contacto` → `Submitted and indexed` (crawl 2026-07-23); `/contacto/` → `URL is unknown to Google`. El sitemap listaba las variantes **con** barra mientras todos los enlaces internos y el canonical usan la forma **sin** barra, así que las URLs del sitemap estaban huérfanas — nada las enlazaba. Corregido en `src/pages/sitemap.xml.ts`; mantener sincronizadas las 3 fuentes (sitemap, `Header.astro`, lista de URLs en `scripts/gsc-snapshot.mjs`).
+- **Sitemap sin descargar**: la API de sitemaps devuelve `isPending: true` y **ningún campo `lastDownloaded`** desde el envío del 2026-02-11 (~6 meses). Google no lo ha bajado nunca.
+- **Search Analytics (28d)**: 8 impresiones, 0 clics, posición media 3.4 — solo la home tiene datos. Muestra insuficiente para atribuir efecto a ningún cambio; ver `seo-loop/metrics.jsonl` para el histórico de indicadores adelantados.
 
-### TODO (2026-01-27)
-- [ ] Solicitar re-indexación en Google Search Console (esperar a mañana, límite de solicitudes alcanzado)
+### TODO (2026-08-03)
+- [ ] Resolver por qué el sitemap nunca se descarga y 6/7 URLs siguen desconocidas para Google (bloqueador real: el loop SEO lleva semanas optimizando páginas que Google no rastrea)
 
 ### Notas sobre vídeos embebidos
 Google Search Console muestra el aviso "El vídeo no está en una página de visualización" para el YouTube embebido en la homepage. Esto es **comportamiento esperado** y no un error:

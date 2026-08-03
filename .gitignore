@@ -35,3 +35,13 @@ yarn-error.log*
 .playwright-mcp/
 .beads/
 validations/
+
+# Google Search Console service account credential (never commit)
+gsc-service-account.json
+
+# SEO weekly loop — working handoff artifacts between pipeline stages
+# (analyst proposal, implementer PR-summary, verifier verdict). Left in
+# place on disk for human inspection but never part of a commit/PR.
+seo-loop/.proposal-*.md
+seo-loop/.pr-summary-*.txt
+seo-loop/.verdict-*.txt

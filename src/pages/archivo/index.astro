@@ -28,9 +28,41 @@ function parseJsonArray(str: string | null): string[] {
     return [];
   }
 }
+
+// Schema.org CollectionPage
+const collectionSchema = {
+  "@type": "CollectionPage",
+  "name": "Archivo | Legacy of the Seas",
+  "description": "Historia, relatos y memorias de Legacy of the Seas. Fotos de conciertos, anécdotas y todo lo que hemos vivido.",
+  "url": new URL("/archivo", Astro.site).toString(),
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": sortedPosts.map((post, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "url": new URL(`/archivo/${post.slug}`, Astro.site).toString(),
+      "name": post.title
+    }))
+  }
+};
+
+// Schema.org BreadcrumbList
+const breadcrumbSchema = {
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Inicio", "item": Astro.site?.toString() },
+    { "@type": "ListItem", "position": 2, "name": "Archivo", "item": new URL("/archivo", Astro.site).toString() }
+  ]
+};
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [collectionSchema, breadcrumbSchema]
+};
 ---
 
 <BaseLayout title="Archivo" description="Historia, relatos y memorias de Legacy of the Seas. Fotos de conciertos, anécdotas y todo lo que hemos vivido.">
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   <!-- Hero section -->
   <section class="py-20 bg-band-dark-50">
     <div class="container mx-auto px-4 text-center">
@@ -114,6 +146,16 @@ function parseJsonArray(str: string | null): string[] {
           </p>
         </div>
       )}
+    </div>
+  </section>
+
+  <!-- Cross-link to conciertos -->
+  <section class="py-12 bg-band-dark-50 text-center">
+    <div class="container mx-auto px-4">
+      <p class="text-gray-300 mb-4">¿Quieres vernos en directo?</p>
+      <a href="/conciertos" class="btn-secondary inline-flex items-center gap-2">
+        Ver próximos conciertos
+      </a>
     </div>
   </section>
 </BaseLayout>

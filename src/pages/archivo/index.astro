@@ -29,11 +29,13 @@ function parseJsonArray(str: string | null): string[] {
   }
 }
 
+const pageDescription = "Historia, relatos y memorias de Legacy of the Seas. Fotos de conciertos, anécdotas y todo lo que hemos vivido.";
+
 // Schema.org CollectionPage
 const collectionSchema = {
   "@type": "CollectionPage",
   "name": "Archivo | Legacy of the Seas",
-  "description": "Historia, relatos y memorias de Legacy of the Seas. Fotos de conciertos, anécdotas y todo lo que hemos vivido.",
+  "description": pageDescription,
   "url": new URL("/archivo", Astro.site).toString(),
   "mainEntity": {
     "@type": "ItemList",
@@ -61,7 +63,7 @@ const schemaData = {
 };
 ---
 
-<BaseLayout title="Archivo" description="Historia, relatos y memorias de Legacy of the Seas. Fotos de conciertos, anécdotas y todo lo que hemos vivido.">
+<BaseLayout title="Archivo" description={pageDescription}>
   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   <!-- Hero section -->
   <section class="py-20 bg-band-dark-50">

@@ -69,12 +69,12 @@ async function main() {
 
   const urls = [
     'https://legacyoftheseas.pages.dev/',
-    'https://legacyoftheseas.pages.dev/conciertos/',
-    'https://legacyoftheseas.pages.dev/nosotros/',
-    'https://legacyoftheseas.pages.dev/tienda/',
-    'https://legacyoftheseas.pages.dev/archivo/',
-    'https://legacyoftheseas.pages.dev/contacto/',
-    'https://legacyoftheseas.pages.dev/archivo/2024-10-04-lanzamiento-leyendas/',
+    'https://legacyoftheseas.pages.dev/conciertos',
+    'https://legacyoftheseas.pages.dev/nosotros',
+    'https://legacyoftheseas.pages.dev/tienda',
+    'https://legacyoftheseas.pages.dev/archivo',
+    'https://legacyoftheseas.pages.dev/contacto',
+    'https://legacyoftheseas.pages.dev/archivo/2024-10-04-lanzamiento-leyendas',
   ];
 
   console.log('=== URL INSPECTION ===');

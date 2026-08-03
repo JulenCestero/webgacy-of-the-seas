@@ -157,7 +157,13 @@ async function main() {
     urlResults[urlToKey(url)] = await inspectUrl(token, url);
     await sleep(300);
   }
-  const indexed = Object.values(urlResults).filter((r) => r.state === 'Submitted and indexed').length;
+  // Count errors separately. A failed inspection has no `state`, so folding it
+  // into "not indexed" would let a rate-limit or network blip record 0/7 in the
+  // ledger and read as catastrophic de-indexing — same "Google says no" vs
+  // "we could not ask" conflation avoided for the sitemap booleans below.
+  const results = Object.values(urlResults);
+  const indexed = results.filter((r) => r.state === 'Submitted and indexed').length;
+  const errored = results.filter((r) => r.error !== undefined).length;
 
   const sitemaps = await getSitemaps(token);
   // null (not false) when the API call failed: "Google says not downloaded" and
@@ -188,6 +194,7 @@ async function main() {
     date: new Date().toISOString().slice(0, 10),
     commit: getCommitSha(),
     indexed,
+    errored,
     total_urls: urls.length,
     sitemap_downloaded,
     sitemap_pending,
@@ -197,7 +204,6 @@ async function main() {
     position_28d: analytics.position ?? null,
     urls: urlResults,
   };
-  if (analytics.error) record.analytics_error = analytics.error;
   if (sitemap_error) record.sitemap_error = sitemap_error;
   if (note) record.note = note;
 

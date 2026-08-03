@@ -96,10 +96,20 @@ function printDelta(prev, curr) {
 
   lines.push('INDEXACIÓN');
   const indexChanged = prev.indexed !== curr.indexed || prev.total_urls !== curr.total_urls;
+  // A failed inspection has no state, so it lands outside `indexed`. If either
+  // snapshot had errors, a moved count may just mean "we could not ask Google"
+  // — do not announce that as a real change.
+  const anyErrored = (prev.errored ?? 0) > 0 || (curr.errored ?? 0) > 0;
+  let indexSuffix;
+  if (!indexChanged) indexSuffix = ' (sin cambio)';
+  else if (anyErrored) indexSuffix = ' (no comparable — hubo inspecciones fallidas)';
+  else indexSuffix = ' (CAMBIO)';
   lines.push(
-    `  Indexadas: ${prev.indexed}/${prev.total_urls} -> ${curr.indexed}/${curr.total_urls}` +
-      (indexChanged ? ' (CAMBIO)' : ' (sin cambio)'),
+    `  Indexadas: ${prev.indexed}/${prev.total_urls} -> ${curr.indexed}/${curr.total_urls}${indexSuffix}`,
   );
+  if ((curr.errored ?? 0) > 0) {
+    lines.push(`  ADVERTENCIA: ${curr.errored} inspeccion(es) fallaron en este snapshot — el conteo va corto.`);
+  }
   const urlKeys = Array.from(new Set([...Object.keys(prev.urls || {}), ...Object.keys(curr.urls || {})]));
   for (const key of urlKeys) lines.push(urlLine(key, curr, prev));
   lines.push('');

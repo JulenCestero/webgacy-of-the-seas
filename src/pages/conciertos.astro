@@ -28,6 +28,8 @@ const eventsSchema = upcomingConcerts.map(concert => ({
   "name": concert.title,
   "startDate": concert.date,
   "endDate": concert.date,
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
   "location": {
     "@type": "Place",
     "name": concert.venue,
@@ -130,17 +132,16 @@ const schemaData = {
             />
           ))}
         </div>
+
+        <p class="mt-8 text-gray-400">
+          ¿Quieres revivir esas noches?
+          <a href="/archivo" class="text-band-sea hover:text-band-gold transition-colors font-medium">
+            Lee las crónicas en el Archivo
+          </a>.
+        </p>
       </div>
     </section>
   )}
-
-  <!-- Cross-link to archivo -->
-  <div class="container mx-auto px-4">
-    <p class="text-center text-gray-400 mt-8">
-      Lee nuestras crónicas y recuerdos en el
-      <a href="/archivo" class="text-band-sea hover:text-band-gold underline">Archivo</a>.
-    </p>
-  </div>
 
   <!-- Newsletter CTA -->
   <section class="py-16 bg-band-dark">

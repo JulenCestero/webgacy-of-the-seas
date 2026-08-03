@@ -97,7 +97,7 @@ const schemaData = {
 };
 ---
 
-<BaseLayout title={post.title} description={post.excerpt || `${post.title} - Legacy of the Seas`}>
+<BaseLayout title={post.title} description={post.excerpt || `${post.title} - Legacy of the Seas`} image={post.image || undefined}>
   <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   <article class="py-16 bg-band-dark">
     <div class="container mx-auto px-4">
@@ -181,7 +181,13 @@ const schemaData = {
         )}
 
         <!-- Footer -->
-        <footer class="mt-12 pt-8 border-t border-band-sea/20">
+        <footer class="mt-12 pt-8 border-t border-band-sea/20 space-y-4">
+          <p class="text-gray-300">
+            ¿Quieres vivirlo en directo?
+            <a href="/conciertos" class="text-band-sea hover:text-band-gold transition-colors font-medium">
+              Consulta nuestros próximos conciertos
+            </a>.
+          </p>
           <a
             href="/archivo"
             class="inline-flex items-center gap-2 text-band-sea hover:text-band-gold transition-colors"

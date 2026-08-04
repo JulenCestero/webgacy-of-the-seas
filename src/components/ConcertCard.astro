@@ -1,4 +1,6 @@
 ---
+import { zonedTimeToUtc, formatUtcStamp, DEFAULT_TIMEZONE, DEFAULT_EVENT_DURATION_MS } from "../lib/ics";
+
 interface Props {
   id?: string;
   title: string;
@@ -8,9 +10,22 @@ interface Props {
   ticketUrl?: string;
   isSoldOut?: boolean;
   isPast?: boolean;
+  startTime?: string | null;
+  timezone?: string | null;
 }
 
-const { id, title, date, venue, city, ticketUrl, isSoldOut = false, isPast = false } = Astro.props;
+const {
+  id,
+  title,
+  date,
+  venue,
+  city,
+  ticketUrl,
+  isSoldOut = false,
+  isPast = false,
+  startTime,
+  timezone,
+} = Astro.props;
 
 // Format date
 const formattedDate = date.toLocaleDateString("es-ES", {
@@ -23,20 +38,42 @@ const dayNumber = date.getDate();
 const monthName = date.toLocaleDateString("es-ES", { month: "short" }).toUpperCase();
 
 // Google Calendar "create event" link (template method, undocumented but
-// stable — see calendar-link's google() implementation on GitHub). For an
-// all-day event `dates` is START/END in YYYYMMDD, and Google treats END as
-// EXCLUSIVE: it must be the day AFTER the show, or the event lands a day
-// short / on the wrong day for anyone whose calendar app renders all-day
-// ranges literally. `date` here is parsed as UTC midnight (see
-// conciertos.astro / conciertos.ics.ts), so we do the +1 day math in UTC
-// too, to avoid a local-timezone off-by-one.
+// stable — see calendar-link's google() implementation on GitHub).
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const toYYYYMMDD = (d: Date) => `${d.getUTCFullYear()}${pad2(d.getUTCMonth() + 1)}${pad2(d.getUTCDate())}`;
-const gcalStart = toYYYYMMDD(date);
-const gcalEndDate = new Date(date);
-gcalEndDate.setUTCDate(gcalEndDate.getUTCDate() + 1);
-const gcalEnd = toYYYYMMDD(gcalEndDate);
-const gcalDates = gcalStart + "/" + gcalEnd;
+
+const trimmedStartTime = startTime?.slice(0, 5) ?? "";
+const hasStartTime = /^\d{2}:\d{2}$/.test(trimmedStartTime);
+
+let gcalDates: string;
+if (hasStartTime) {
+  // Timed event. `date` (from conciertos.astro) is UTC-midnight for this
+  // calendar day; take just the YYYY-MM-DD part and combine with the
+  // wall-clock startTime in the concert's own timezone, converted to a real
+  // UTC instant (same helper the .ics generator uses, so both paths agree).
+  // Google's TEMPLATE URL accepts `dates=<start>Z/<end>Z` in UTC — no `ctz`
+  // param needed, since a Z-suffixed UTC instant renders correctly in each
+  // viewer's own Google Calendar timezone automatically (the same behavior
+  // any UTC-timed .ics VEVENT gets).
+  const datePart = toYYYYMMDD(date).replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
+  const tz = timezone || DEFAULT_TIMEZONE;
+  const start = zonedTimeToUtc(datePart, trimmedStartTime, tz);
+  const end = new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS);
+  gcalDates = formatUtcStamp(start) + "/" + formatUtcStamp(end);
+} else {
+  // No start time on record: all-day event. `dates` is START/END in
+  // YYYYMMDD, and Google treats END as EXCLUSIVE: it must be the day AFTER
+  // the show, or the event lands a day short / on the wrong day for anyone
+  // whose calendar app renders all-day ranges literally. `date` here is
+  // parsed as UTC midnight (see conciertos.astro / conciertos.ics.ts), so we
+  // do the +1 day math in UTC too, to avoid a local-timezone off-by-one.
+  const gcalStart = toYYYYMMDD(date);
+  const gcalEndDate = new Date(date);
+  gcalEndDate.setUTCDate(gcalEndDate.getUTCDate() + 1);
+  const gcalEnd = toYYYYMMDD(gcalEndDate);
+  gcalDates = gcalStart + "/" + gcalEnd;
+}
+
 const gcalDetails = ticketUrl ? "Entradas: " + ticketUrl : "Legacy of the Seas en directo.";
 
 const gcalParams = new URLSearchParams({

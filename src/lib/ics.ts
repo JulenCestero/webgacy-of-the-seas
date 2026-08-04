@@ -72,6 +72,77 @@ export function formatDateOnly(d: Date): string {
   return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
 }
 
+/** Concerts with no `timezone` recorded (pre-migration-0001 rows written by
+ * a path that skipped the admin form) fall back to this — same precedent as
+ * bandsintown-csv.ts's DEFAULT_TIMEZONE. */
+export const DEFAULT_TIMEZONE = "Europe/Madrid";
+
+/** Gigs have no recorded end time in the DB. Two hours is a reasonable
+ * estimate for a live show and gives calendar apps a sane block instead of
+ * a zero-length event. */
+export const DEFAULT_EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Offset (in ms) between a UTC instant and the wall-clock time that same
+ * instant reads as in `timeZone`, expressed as
+ * `Date.UTC(wall-clock fields) - instant.getTime()`. Built on
+ * `Intl.DateTimeFormat`, which Cloudflare Workers ship with full ICU data
+ * for (unlike `Buffer`/`fs`/`path`, this is a real Web-standard API
+ * available on the edge — no nodejs_compat flag needed).
+ */
+function tzOffsetMs(instant: Date, timeZone: string): number {
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const parts = dtf.formatToParts(instant).reduce<Record<string, string>>((acc, p) => {
+    if (p.type !== "literal") acc[p.type] = p.value;
+    return acc;
+  }, {});
+  const wallAsUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second),
+  );
+  return wallAsUtc - instant.getTime();
+}
+
+/**
+ * Convert a wall-clock local time ("YYYY-MM-DD" + "HH:MM", e.g. 21:30 in
+ * Europe/Madrid) to the UTC instant it represents. Europe/Madrid is
+ * UTC+1 (CET) in winter and UTC+2 (CEST) in summer, so a naive
+ * `new Date(date + "T" + time + "Z")` would be off by 1-2 hours depending
+ * on the season — this does a proper local -> UTC conversion using the
+ * timezone's real offset instead of assuming a fixed one.
+ *
+ * Algorithm: treat the wall-clock string as if it were already UTC to get
+ * a first-guess instant, look up what offset `timeZone` has *at that
+ * guessed instant*, and correct by it. Re-check the offset at the
+ * corrected instant in case the first guess landed on the other side of a
+ * DST transition (only matters for a handful of hours twice a year; a
+ * second pass makes the result correct even then).
+ */
+export function zonedTimeToUtc(dateStr: string, timeStr: string, timeZone: string): Date {
+  const naiveUtcMs = new Date(`${dateStr}T${timeStr}:00.000Z`).getTime();
+
+  const offset1 = tzOffsetMs(new Date(naiveUtcMs), timeZone);
+  const guess2Ms = naiveUtcMs - offset1;
+
+  const offset2 = tzOffsetMs(new Date(guess2Ms), timeZone);
+  const realMs = offset2 === offset1 ? guess2Ms : naiveUtcMs - offset2;
+
+  return new Date(realMs);
+}
+
 /**
  * DTSTAMP must be derived from the DATA, not from the clock. With
  * `new Date()` every request produced a fresh DTSTAMP, so a subscribed
@@ -89,18 +160,16 @@ export function stampFor(
 }
 
 export function buildEvent(concert: Concert, dtstamp: string): string {
-  const raw = concert.date;
-  // `concerts.date` is stored as an ISO date string (see schema.ts comment).
-  // In practice (see migrate.ts / admin forms) it is written as a bare
-  // "YYYY-MM-DD" day with no time component — conciertos.astro treats it the
-  // same way (`new Date(concert.date)` is only used for display formatting,
-  // never compared with time-of-day precision). We detect a time component
-  // defensively: if present, emit a real timed event; Turso stores no
-  // timezone info for it, and this band's shows are all in Europe/Madrid, so
-  // a bare "T..." with no "Z"/offset is treated as Europe/Madrid local time
-  // and converted to UTC explicitly rather than left as an ambiguous
-  // floating time.
-  const hasTime = /T\d{2}:\d{2}/.test(raw);
+  // `concerts.date` is stored as a bare "YYYY-MM-DD" (see schema.ts comment
+  // and migrate.ts/admin forms); `startTime` ("HH:MM") and `timezone` (IANA)
+  // are the columns added in migration 0001 for the Bandsintown CSV export
+  // (see bandsintown-csv.ts). Rows never re-saved through a path that skips
+  // the admin form could still have a null/empty startTime despite the
+  // migration's '20:00' default, so fall back to an all-day event rather
+  // than inventing a time.
+  const datePart = concert.date.slice(0, 10);
+  const startTime = concert.startTime?.slice(0, 5) ?? "";
+  const hasTime = /^\d{2}:\d{2}$/.test(startTime);
 
   const lines: string[] = [];
   lines.push("BEGIN:VEVENT");
@@ -108,33 +177,16 @@ export function buildEvent(concert: Concert, dtstamp: string): string {
   lines.push(icsLine("DTSTAMP", dtstamp));
 
   if (hasTime) {
-    // Has an explicit time. If it already carries an offset/Z, Date parses
-    // it correctly to an absolute instant; if it's a bare local datetime,
-    // JS `Date` parses it as local-to-the-server time which is wrong on a
-    // UTC build server — so we only trust it when it's unambiguous (has Z
-    // or +hh:mm). Otherwise fall back to treating the date part as a
-    // Europe/Madrid all-day event to avoid emitting a wrong absolute time.
-    const hasOffset = /Z$|[+-]\d{2}:?\d{2}$/.test(raw);
-    if (hasOffset) {
-      const d = new Date(raw);
-      lines.push(icsLine("DTSTART", formatUtcStamp(d)));
-    } else {
-      // Bare local datetime with no offset info: treat the wall-clock time
-      // as Europe/Madrid. Europe/Madrid is UTC+1 (CET) or UTC+2 (CEST); we
-      // don't have a timezone DB here, so approximate using the JS engine's
-      // own local-time parsing is unreliable on a UTC server. Since our own
-      // admin UI never actually writes a time component today, treat this
-      // conservatively as an all-day event on the date portion instead of
-      // guessing an offset.
-      const datePart = raw.slice(0, 10);
-      const d = new Date(`${datePart}T00:00:00Z`);
-      lines.push(icsLine("DTSTART;VALUE=DATE", formatDateOnly(d)));
-    }
+    const timeZone = concert.timezone || DEFAULT_TIMEZONE;
+    const start = zonedTimeToUtc(datePart, startTime, timeZone);
+    const end = new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS);
+    lines.push(icsLine("DTSTART", formatUtcStamp(start)));
+    lines.push(icsLine("DTEND", formatUtcStamp(end)));
   } else {
-    // No time component in the stored value: all-day event.
-    // Parse as UTC midnight so the calendar date doesn't shift a day
-    // depending on the reader's/server's local timezone.
-    const d = new Date(`${raw}T00:00:00Z`);
+    // No usable start time: all-day event. Parse as UTC midnight so the
+    // calendar date doesn't shift a day depending on the reader's/server's
+    // local timezone.
+    const d = new Date(`${datePart}T00:00:00Z`);
     lines.push(icsLine("DTSTART;VALUE=DATE", formatDateOnly(d)));
   }
 

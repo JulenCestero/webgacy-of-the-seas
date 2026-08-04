@@ -31,13 +31,24 @@ function isUpcoming(dateStr: string): boolean {
       <h1 class="admin-title">Conciertos</h1>
       <p class="admin-subtitle">Gestiona las fechas de conciertos</p>
     </div>
-    <a href="/admin/conciertos/nuevo" class="btn btn-primary">
-      <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
-      Nuevo concierto
-    </a>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <a href="/admin/api/concerts/bandsintown-csv" class="btn btn-secondary">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+        </svg>
+        Descargar CSV para Bandsintown
+      </a>
+      <a href="/admin/conciertos/nuevo" class="btn btn-primary">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Nuevo concierto
+      </a>
+    </div>
   </div>
+  <p style="color: var(--admin-muted); font-size: 0.8rem; margin: -0.5rem 0 1.5rem;">
+    El CSV asume País = España, Zona horaria = Europe/Madrid y Hora = 20:00 para todas las fechas (no guardamos esos datos por concierto). Revisa el archivo antes de subirlo a Bandsintown.
+  </p>
 
   <div class="card" style="padding: 0; overflow: hidden;">
     {allConcerts.length > 0 ? (

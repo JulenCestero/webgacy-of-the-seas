@@ -6,8 +6,9 @@ import { buildCalendar, slugifyAscii } from "../../lib/ics";
 /**
  * Per-concert calendar download: a fan looking at one concert wants "add
  * this one to my calendar", distinct from the full /conciertos.ics
- * subscription feed (webcal://, all concerts, meant to be subscribed to
- * once). This endpoint returns a single-VEVENT .ics file as an attachment.
+ * subscription feed (webcal://, upcoming concerts, meant to be subscribed
+ * to once and stay in sync). This endpoint returns a single-VEVENT .ics
+ * file as an attachment.
  */
 export async function GET(context: APIContext): Promise<Response> {
   const { id } = context.params;
@@ -27,6 +28,20 @@ export async function GET(context: APIContext): Promise<Response> {
 
   if (!concert) {
     return new Response("Concierto no encontrado.", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+
+  // Past concerts get no calendar file. ConcertCard only renders the button
+  // for upcoming ones, but the URL is guessable and links get shared, so the
+  // rule is enforced here too rather than only hidden in the UI — same policy
+  // as the subscription feed and the Bandsintown CSV: calendars are for gigs
+  // you can still attend. Compared as YYYY-MM-DD strings (how `date` is
+  // stored), so a gig happening today still counts as upcoming.
+  const today = new Date().toISOString().slice(0, 10);
+  if ((concert.date ?? "") < today) {
+    return new Response("Este concierto ya ha pasado.", {
       status: 404,
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });

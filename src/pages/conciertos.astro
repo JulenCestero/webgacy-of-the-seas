@@ -12,6 +12,18 @@ const db = createDb(runtimeEnv);
 // Get current date in ISO format for comparison
 const now = new Date().toISOString().split('T')[0];
 
+// Calendar subscription links. Google Calendar has no "webcal://" click
+// handler on Windows — it triggers the OS "choose an app" dialog, which
+// most people cancel. Its own undocumented-but-widely-used shortcut
+// (https://til.simonwillison.net/ics/google-calendar-ics-subscribe-link)
+// takes a `cid=webcal://...` query param and drops the user straight into
+// the "Subscribe to this calendar?" prompt inside Google Calendar itself —
+// no OS dialog. That's the primary CTA; webcal:// and a plain https
+// download are kept as a secondary option for Outlook/Apple/Thunderbird.
+const icsFeedUrl = new URL("/conciertos.ics", Astro.site).toString();
+const webcalFeedUrl = icsFeedUrl.replace(/^https:\/\//, "webcal://");
+const googleCalendarSubscribeUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcalFeedUrl)}`;
+
 // Get upcoming concerts (date >= now) sorted ascending
 const upcomingConcerts = await db.select().from(concerts)
   .where(gte(concerts.date, now))
@@ -82,20 +94,41 @@ const schemaData = {
   <!-- Upcoming concerts -->
   <section class="py-16 bg-band-dark">
     <div class="container mx-auto px-4">
-      <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+      <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
         <h2 class="text-2xl md:text-3xl font-metal text-band-sea">
           Próximos Conciertos
         </h2>
-        <a
-          href="webcal://legacyoftheseas.pages.dev/conciertos.ics"
-          title="Suscríbete y recibe todos los conciertos futuros automáticamente en tu app de calendario"
-          class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-band-sea transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          Suscribirse a todos los conciertos
-        </a>
+        <div class="flex flex-col items-start sm:items-end gap-1.5">
+          <a
+            href={googleCalendarSubscribeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Suscríbete y recibe todos los conciertos futuros automáticamente en Google Calendar"
+            class="inline-flex items-center gap-2 text-sm text-band-sea hover:text-band-gold transition-colors font-medium"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Suscribirse en Google Calendar
+          </a>
+          <div class="flex items-center gap-3 text-xs text-gray-500">
+            <a
+              href={webcalFeedUrl}
+              title="Suscribirse con Outlook, Apple Calendar o Thunderbird"
+              class="hover:text-band-sea transition-colors"
+            >
+              Otras apps (Outlook, Apple)
+            </a>
+            <span aria-hidden="true">·</span>
+            <a
+              href={icsFeedUrl}
+              title="Descargar el archivo .ics con los próximos conciertos"
+              class="hover:text-band-sea transition-colors"
+            >
+              Descargar .ics
+            </a>
+          </div>
+        </div>
       </div>
 
       {upcomingConcerts.length > 0 ? (

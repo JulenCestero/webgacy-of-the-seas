@@ -122,9 +122,10 @@ export async function GET(context: APIContext): Promise<Response> {
 
   // Upcoming only. This file is for ANNOUNCING gigs on Bandsintown, so past
   // dates must not ride along — uploading them would publish stale shows as
-  // if they were new. (The /conciertos.ics feed does the opposite on purpose:
-  // a subscribed calendar keeps its history.) Compared as YYYY-MM-DD strings,
-  // which is how `date` is stored, so today's gig still counts as upcoming.
+  // if they were new. (The /conciertos.ics feed also filters to upcoming only,
+  // for a different reason: so new subscribers don't get months of past gigs
+  // dumped into their agenda.) Compared as YYYY-MM-DD strings, which is how
+  // `date` is stored, so today's gig still counts as upcoming.
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = allConcerts.filter((c) => (c.date ?? "") >= today);
 

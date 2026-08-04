@@ -1,0 +1,16 @@
+-- Backfill `concerts.image` into the migration history.
+--
+-- `image` was added to schema.ts and applied to Turso with `drizzle-kit push`,
+-- so it never entered a tracked migration: 0000's CREATE TABLE concerts does
+-- not have it, and 0001's snapshot already records it as present — meaning
+-- `drizzle-kit generate` diffs against that snapshot and will never emit the
+-- missing statement on its own. Without this file, a from-scratch bootstrap
+-- (new Turso branch, local dev DB, CI, disaster recovery) builds a `concerts`
+-- table with no `image` column and dies on the first insert from the admin,
+-- which reads/writes it unconditionally.
+--
+-- SQLite has no `ADD COLUMN IF NOT EXISTS`, so on any database that already
+-- went through `push` (production does) this statement fails with
+-- "duplicate column name: image". That is expected and harmless — the column
+-- is already there. Apply it only when bootstrapping a fresh database.
+ALTER TABLE `concerts` ADD `image` text;

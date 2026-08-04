@@ -40,22 +40,12 @@ const HEADERS = [
 
 const ARTIST_NAME = "Legacy of the Seas";
 
-// FALLBACKS — Country*/Region*/Timezone*/Start Time* are real per-concert
-// columns on `concerts` (see schema.ts: country, region, timezone,
-// startTime), editable from the admin's concert form under "Datos para
-// Bandsintown / sindicación". These constants are ONLY used as a fallback
-// for rows saved before those columns existed (they'll read as null/empty
-// until someone re-saves the concert in the admin) — legacy Donostia-based
-// shows fall back to Spain/Europe-Madrid/20:00, which was true for all of
-// them at the time. New concerts always carry their own real values.
+// Belt-and-braces fallbacks: migration 0001 gave every existing row a real
+// default, so nothing currently relies on these. They cover a row written
+// by a path that skips the admin form (a manual SQL insert, a future script).
 const DEFAULT_COUNTRY = "Spain";
 const DEFAULT_TIMEZONE = "Europe/Madrid";
 const DEFAULT_START_TIME = "20:00";
-// Region* (province/state): the real Bandsintown template's own Berlin
-// example row (Germany) ships with Region* EMPTY despite the asterisk, so
-// the field is evidently optional in practice for at least some countries.
-// Used as a fallback for concerts saved before the `region` column existed.
-const DEFAULT_REGION = "";
 
 /**
  * Quote a CSV field per RFC 4180: wrap in double quotes if it contains a
@@ -91,11 +81,16 @@ function concertToRow(concert: Concert): string {
     "Country*": concert.country || DEFAULT_COUNTRY,
     "Address": "",
     "City*": concert.city,
-    "Region*": concert.region || DEFAULT_REGION,
+    // Empty is fine: Bandsintown's own template ships Region* empty for its
+    // Germany example row despite the asterisk.
+    "Region*": concert.region || "",
     "Postal Code": "",
     "Timezone*": concert.timezone || DEFAULT_TIMEZONE,
     "Start Date* (yyyy-mm-dd)": toStartDate(concert.date),
-    "Start Time* (HH:MM)": concert.startTime || DEFAULT_START_TIME,
+    // slice(0,5) for the same reason toStartDate exists: `<input type="time">`
+    // yields HH:MM today, but a `step` attribute or a hand-edited DB row could
+    // produce HH:MM:SS, which is not the format Bandsintown asks for.
+    "Start Time* (HH:MM)": concert.startTime?.slice(0, 5) || DEFAULT_START_TIME,
     "End Date": "",
     "End Time": "",
     "Streaming Link": "",

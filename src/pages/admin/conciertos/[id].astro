@@ -33,6 +33,10 @@ if (Astro.request.method === "POST") {
     const ticketUrl = formData.get("ticketUrl") as string || null;
     const isSoldOut = formData.get("isSoldOut") === "on";
     const description = formData.get("description") as string || null;
+    const country = formData.get("country") as string || "Spain";
+    const region = formData.get("region") as string || null;
+    const timezone = formData.get("timezone") as string || "Europe/Madrid";
+    const startTime = formData.get("startTime") as string || "20:00";
 
     // Validate required fields
     if (!title || !date || !venue || !city) {
@@ -49,6 +53,10 @@ if (Astro.request.method === "POST") {
           ticketUrl,
           isSoldOut,
           description,
+          country,
+          region,
+          timezone,
+          startTime,
           updatedAt: new Date().toISOString(),
         })
         .where(eq(concerts.id, id!));
@@ -66,6 +74,30 @@ if (Astro.request.method === "POST") {
 
 // Format date for input
 const formattedDate = concert.date.split('T')[0];
+
+// Datos para Bandsintown, con los mismos defaults que la exportación CSV
+// (conciertos guardados antes de que existieran estas columnas tendrán null)
+const countryValue = concert.country || "Spain";
+const regionValue = concert.region || "";
+const timezoneValue = concert.timezone || "Europe/Madrid";
+const startTimeValue = concert.startTime || "20:00";
+const TIMEZONE_OPTIONS = [
+  "Europe/Madrid",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Europe/Lisbon",
+  "Europe/London",
+  "Europe/Rome",
+  "Europe/Amsterdam",
+  "Europe/Brussels",
+  "America/New_York",
+  "America/Los_Angeles",
+];
+// If the stored value isn't in the curated list (edited by hand elsewhere),
+// keep it selectable so saving the form doesn't silently overwrite it.
+if (!TIMEZONE_OPTIONS.includes(timezoneValue)) {
+  TIMEZONE_OPTIONS.push(timezoneValue);
+}
 ---
 
 <AdminLayout title="Editar concierto">
@@ -113,6 +145,46 @@ const formattedDate = concert.date.split('T')[0];
         <div class="form-field">
           <label for="venue">Lugar / Sala <span class="required">*</span></label>
           <input type="text" id="venue" name="venue" required value={concert.venue} placeholder="Sala Apolo, Kafe Antzokia..." />
+        </div>
+      </div>
+    </div>
+
+    <!-- Datos para Bandsintown / sindicación -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        <h3>Datos para Bandsintown / sindicación</h3>
+      </div>
+      <div class="form-section-content">
+        <small class="form-hint" style="display: block; margin-bottom: 0.75rem;">Estos datos alimentan el CSV de exportación a Bandsintown (ver "Descargar CSV para Bandsintown" en el listado).</small>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="startTime">Hora de inicio</label>
+            <input type="time" id="startTime" name="startTime" value={startTimeValue} />
+          </div>
+          <div class="form-field">
+            <label for="country">País (en inglés, p. ej. Spain)</label>
+            <input type="text" id="country" name="country" value={countryValue} placeholder="Spain" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="region">Provincia / Región</label>
+            <input type="text" id="region" name="region" value={regionValue} placeholder="Gipuzkoa" />
+            <small class="form-hint">Opcional, se puede dejar vacío</small>
+          </div>
+          <div class="form-field">
+            <label for="timezone">Zona horaria</label>
+            <select id="timezone" name="timezone">
+              {TIMEZONE_OPTIONS.map((tz) => (
+                <option value={tz} selected={tz === timezoneValue}>{tz}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>

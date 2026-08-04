@@ -23,6 +23,11 @@ export const concerts = sqliteTable('concerts', {
   ticketUrl: text('ticket_url'),
   isSoldOut: integer('is_sold_out', { mode: 'boolean' }).default(false),
   description: text('description'), // Contenido markdown
+  // Campos para exportación a Bandsintown (ver bandsintown-csv.ts)
+  country: text('country').default('Spain'), // En inglés (Bandsintown usa nombres en inglés)
+  region: text('region'), // Provincia/estado, opcional
+  timezone: text('timezone').default('Europe/Madrid'), // Identificador IANA
+  startTime: text('start_time').default('20:00'), // 'HH:MM'
   createdAt: text('created_at').default(''),
   updatedAt: text('updated_at').default(''),
 });

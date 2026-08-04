@@ -40,23 +40,21 @@ const HEADERS = [
 
 const ARTIST_NAME = "Legacy of the Seas";
 
-// ASSUMPTIONS — these are not in our database at all. Bandsintown marks
-// Country*/Region*/Timezone*/Start Time* as required, but our `concerts`
-// table only has venue/city/date (see schema.ts). Legacy of the Seas is
-// based in Donostia, so we default every row to Spain/Europe-Madrid/20:00.
-// If the band ever plays outside Spain, these defaults will be WRONG for
-// that row and must be hand-corrected before upload — the admin UI link
-// carries a visible warning about this (see admin/conciertos/index.astro).
+// FALLBACKS — Country*/Region*/Timezone*/Start Time* are real per-concert
+// columns on `concerts` (see schema.ts: country, region, timezone,
+// startTime), editable from the admin's concert form under "Datos para
+// Bandsintown / sindicación". These constants are ONLY used as a fallback
+// for rows saved before those columns existed (they'll read as null/empty
+// until someone re-saves the concert in the admin) — legacy Donostia-based
+// shows fall back to Spain/Europe-Madrid/20:00, which was true for all of
+// them at the time. New concerts always carry their own real values.
 const DEFAULT_COUNTRY = "Spain";
 const DEFAULT_TIMEZONE = "Europe/Madrid";
 const DEFAULT_START_TIME = "20:00";
 // Region* (province/state): the real Bandsintown template's own Berlin
 // example row (Germany) ships with Region* EMPTY despite the asterisk, so
 // the field is evidently optional in practice for at least some countries.
-// We don't store a province per concert, and Donostia-based shows are
-// overwhelmingly in a single region (Gipuzkoa) that adds no disambiguating
-// value here — so we leave Region* empty for every row rather than guess,
-// consistent with what the template itself demonstrates is tolerated.
+// Used as a fallback for concerts saved before the `region` column existed.
 const DEFAULT_REGION = "";
 
 /**
@@ -90,14 +88,14 @@ function concertToRow(concert: Concert): string {
   const row: Record<(typeof HEADERS)[number], string> = {
     "Artist Name": ARTIST_NAME,
     "Venue*": concert.venue,
-    "Country*": DEFAULT_COUNTRY,
+    "Country*": concert.country || DEFAULT_COUNTRY,
     "Address": "",
     "City*": concert.city,
-    "Region*": DEFAULT_REGION,
+    "Region*": concert.region || DEFAULT_REGION,
     "Postal Code": "",
-    "Timezone*": DEFAULT_TIMEZONE,
+    "Timezone*": concert.timezone || DEFAULT_TIMEZONE,
     "Start Date* (yyyy-mm-dd)": toStartDate(concert.date),
-    "Start Time* (HH:MM)": DEFAULT_START_TIME,
+    "Start Time* (HH:MM)": concert.startTime || DEFAULT_START_TIME,
     "End Date": "",
     "End Time": "",
     "Streaming Link": "",

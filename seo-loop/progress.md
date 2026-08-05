@@ -258,3 +258,70 @@ warnings from an unrelated admin upload endpoint, and a stale
 `browserslist` data notice).
 
 ---
+
+## 2026-08-05
+
+**Checked:** `seo-loop/.proposal-2026-08-05.md` (analyst stage) against the
+live repo files. All three targets matched the proposal exactly — the
+canonical line in `src/layouts/BaseLayout.astro` was still
+`new URL(Astro.url.pathname, Astro.site)`, `og:type` was still hardcoded to
+`"website"`, and `src/pages/archivo/[slug].astro` still had
+`alt={`Foto ${index + 1}`}` on the gallery images. No discrepancies, no
+adjustments needed.
+
+The analyst's GSC snapshot for this run (2/7 URLs indexed, sitemap still
+never downloaded by Google, 8 impressions / 0 clicks over 28d) is recorded
+in `seo-loop/metrics.jsonl` and the proposal; not re-verified or re-stated
+here, since this stage doesn't query GSC.
+
+**Implemented** (all 3 proposals, no deviations):
+
+1. **Canonical URL trailing-slash normalization** —
+   `src/layouts/BaseLayout.astro`: the pathname is now run through
+   `.replace(/(.)\/$/, "$1")` before building `canonicalURL`, so
+   `/conciertos/` and `/conciertos` (both serve HTTP 200 on the SSR
+   deployment) self-canonicalize to the same no-trailing-slash URL — the
+   form already used by every internal link and by the sitemap since the
+   2026-08-03 run. The `(.)` capture leaves the root `/` untouched.
+   `canonicalURL` also feeds `og:url` and the three `hreflang` alternates
+   in the same file, so those normalize consistently — intended per the
+   proposal. Per guardrails: no `trailingSlash` config change, no
+   `_redirects` entries, no `Header.astro`/`Footer.astro` href changes.
+2. **`og:type="article"` for archive posts** — `BaseLayout.astro` gained an
+   optional `ogType?: string` prop defaulting to `"website"`, and the
+   `<meta property="og:type">` tag now reads from it.
+   `src/pages/archivo/[slug].astro` passes `ogType="article"`. The other 6
+   static pages are unchanged (they get the default). No
+   `article:published_time` / `article:author` sub-properties added, and
+   the `BlogPosting` JSON-LD block was not touched.
+3. **Descriptive gallery alt text** — `src/pages/archivo/[slug].astro`:
+   `alt={`Foto ${index + 1}`}` → `alt={`${post.title} - foto ${index + 1}`}`.
+   `post.title` is `notNull()` in `src/lib/schema.ts`, so no null
+   interpolation. The hero image's `alt={post.title}` and every deliberate
+   decorative `alt=""` were left alone, and no `loading`/`decoding`/
+   `fetchpriority` attributes were changed (prior perf work preserved).
+
+**Left for later** (carried forward from the proposal, deliberately not
+done this run):
+- **The real blocker is still non-code**: 5/7 URLs remain unknown to Google
+  and the sitemap has never been downloaded (`isPending: true` since the
+  2026-02-11 submission, resubmitted 2026-08-04). No edit in this repo
+  fixes crawl budget/authority on a new `pages.dev` domain with ~0
+  backlinks. Next escalation is manual (per-URL "Request indexing" in the
+  GSC UI, a custom domain, or backlinks) — outside this pipeline.
+- `BreadcrumbList` only exists on `/archivo` and `/archivo/[slug]`; adding
+  it to the other 4 static subpages needs either 4 edits or a generic
+  breadcrumb in `BaseLayout` — bigger than a weekly increment.
+- Per-page OG images for the 6 static pages (content/design work).
+- `docs/seo-audit.md` still cites the dead `sitemap-index.xml` /
+  `sitemap-0.xml` paths (noted for the 3rd time; docs-only, not urgent).
+
+**Blockers**: none for this run's changes.
+
+**Build result**: `npm run build` — passed (`astro build` completed, server
+built in 8.95s, client build ✓, prerendering ✓, no errors). Only the
+expected pre-existing warnings: Cloudflare `sharp`-at-runtime note, two
+`node:fs`/`node:path` externalization warnings from
+`src/pages/admin/api/upload.ts`, and the stale `browserslist` data notice.
+
+---

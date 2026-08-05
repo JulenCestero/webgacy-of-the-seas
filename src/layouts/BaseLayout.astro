@@ -8,15 +8,20 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  ogType?: string;
 }
 
 const {
   title,
   description = "Legacy of the Seas - Banda de Metal",
   image = "/og-image.jpg",
+  ogType = "website",
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+// Strip the trailing slash (except on the root) so /conciertos/ and
+// /conciertos self-canonicalize to the same URL — both variants serve 200.
+const normalizedPath = Astro.url.pathname.replace(/(.)\/$/, "$1");
+const canonicalURL = new URL(normalizedPath, Astro.site);
 ---
 
 <!doctype html>
@@ -33,7 +38,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="alternate" hreflang="x-default" href={canonicalURL} />
 
     <!-- Open Graph -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={`${title} | Legacy of the Seas`} />
     <meta property="og:description" content={description} />

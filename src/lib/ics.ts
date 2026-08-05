@@ -159,27 +159,41 @@ export function stampFor(
   return parsed && !isNaN(parsed.getTime()) ? formatUtcStamp(parsed) : requestStamp;
 }
 
-export function buildEvent(concert: Concert, dtstamp: string): string {
-  // `concerts.date` is stored as a bare "YYYY-MM-DD" (see schema.ts comment
-  // and migrate.ts/admin forms); `startTime` ("HH:MM") and `timezone` (IANA)
-  // are the columns added in migration 0001 for the Bandsintown CSV export
-  // (see bandsintown-csv.ts). Rows never re-saved through a path that skips
-  // the admin form could still have a null/empty startTime despite the
-  // migration's '20:00' default, so fall back to an all-day event rather
-  // than inventing a time.
+/**
+ * Resolve a concert row into absolute start/end instants.
+ *
+ * `concerts.date` is stored as a bare "YYYY-MM-DD" (see schema.ts comment and
+ * migrate.ts/admin forms); `startTime` ("HH:MM") and `timezone` (IANA) are the
+ * columns added in migration 0001 for the Bandsintown CSV export (see
+ * bandsintown-csv.ts). Rows never re-saved through a path that skips the admin
+ * form could still have a null/empty startTime despite the migration's '20:00'
+ * default, so `start`/`end` come back null rather than inventing a time — the
+ * caller decides what an all-day concert looks like in its own format.
+ *
+ * Shared by the ICS feed (all-day VEVENT) and the MusicEvent JSON-LD on
+ * /conciertos (bare date in startDate); the "is startTime usable" guard must
+ * not drift between them.
+ */
+export function resolveEventInstants(
+  concert: Pick<Concert, "date" | "startTime" | "timezone">,
+): { datePart: string; start: Date | null; end: Date | null } {
   const datePart = concert.date.slice(0, 10);
   const startTime = concert.startTime?.slice(0, 5) ?? "";
-  const hasTime = /^\d{2}:\d{2}$/.test(startTime);
+  if (!/^\d{2}:\d{2}$/.test(startTime)) return { datePart, start: null, end: null };
+
+  const start = zonedTimeToUtc(datePart, startTime, concert.timezone || DEFAULT_TIMEZONE);
+  return { datePart, start, end: new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS) };
+}
+
+export function buildEvent(concert: Concert, dtstamp: string): string {
+  const { datePart, start, end } = resolveEventInstants(concert);
 
   const lines: string[] = [];
   lines.push("BEGIN:VEVENT");
   lines.push(icsLine("UID", `${concert.id}@${DOMAIN}`));
   lines.push(icsLine("DTSTAMP", dtstamp));
 
-  if (hasTime) {
-    const timeZone = concert.timezone || DEFAULT_TIMEZONE;
-    const start = zonedTimeToUtc(datePart, startTime, timeZone);
-    const end = new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS);
+  if (start && end) {
     lines.push(icsLine("DTSTART", formatUtcStamp(start)));
     lines.push(icsLine("DTEND", formatUtcStamp(end)));
   } else {

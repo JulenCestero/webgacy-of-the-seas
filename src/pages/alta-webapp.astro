@@ -2,7 +2,7 @@
 // Mini App de Telegram para el alta de concierto (D-04/D-05, ALTA-01, WEB-01).
 //
 // Página SSR pública sin lectura de datos: no importa nada de "../lib/db" ni
-// consulta Turso — el prefill de edición (02-04) llegará solo por query
+// consulta Turso — el prefill de edición (02-04) llega solo por query
 // string, nunca por una lectura en vivo (prohibición de must_haves 02-01).
 //
 // La cabecera de frames heredada del fichero de cabeceras global del sitio
@@ -35,6 +35,11 @@ Astro.response.headers.set(
   "Content-Security-Policy",
   `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://telegram.org; style-src 'self'; frame-ancestors https://web.telegram.org https://telegram.org;`
 );
+
+// 02-03: formulario completo según 02-UI-SPEC.md — 3 secciones, opcionales
+// de ALTA-01, validación cliente y modo edición/cancelación (D-10/D-12). El
+// prefill de edición sigue llegando SOLO por query string (mismo script,
+// mismo contrato que 02-01), nunca por lectura de Turso en esta página.
 ---
 
 <!doctype html>
@@ -62,150 +67,424 @@ Astro.response.headers.set(
       class="mx-auto max-w-md px-4"
       style="padding-top: max(24px, env(safe-area-inset-top)); padding-bottom: max(24px, env(safe-area-inset-bottom));"
     >
-      <h1 class="font-metal text-[28px] leading-tight text-band-sea mt-4 mb-2">
+      <h1 id="page-title" class="font-metal font-semibold text-[28px] leading-tight text-band-sea mt-4 mb-2">
         Dar de alta un concierto
       </h1>
 
-      <div class="bg-band-dark-100 rounded-lg p-6 mt-6">
-        <h2 class="font-metal text-xl text-white mb-2">Nuevo concierto</h2>
-        <p class="text-sm text-gray-400 mb-6">
-          Rellena los datos obligatorios y pulsa Publicar. El cartel, la letra de invitados y la
-          descripción se pueden añadir más tarde.
-        </p>
+      <div class="mt-8">
+        <div id="empty-state-wrapper">
+          <h2 id="empty-state-heading" class="font-metal font-semibold text-xl text-white mb-2">
+            Nuevo concierto
+          </h2>
+          <p id="empty-state-body" class="text-sm text-gray-400 mb-6">
+            Rellena los datos obligatorios y pulsa Publicar. El cartel, la letra de invitados y la
+            descripción se pueden añadir más tarde.
+          </p>
+        </div>
 
-        <form id="alta-form" class="space-y-4">
-          <div>
-            <label for="title" class="block text-sm font-semibold mb-1">Título</label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              required
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label for="date" class="block text-sm font-semibold mb-1">Fecha</label>
-            <input
-              type="date"
-              id="date"
-              name="date"
-              required
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label for="time" class="block text-sm font-semibold mb-1">Hora</label>
-            <input
-              type="time"
-              id="time"
-              name="time"
-              required
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label for="venue" class="block text-sm font-semibold mb-1">Sala</label>
-            <input
-              type="text"
-              id="venue"
-              name="venue"
-              required
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label for="city" class="block text-sm font-semibold mb-1">Ciudad</label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              required
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label for="country" class="block text-sm font-semibold mb-1">País</label>
-            <input
-              type="text"
-              id="country"
-              name="country"
-              value="Spain"
-              required
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label for="region" class="block text-sm font-semibold mb-1">Provincia</label>
-            <input
-              type="text"
-              id="region"
-              name="region"
-              required
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label for="ticket_url" class="block text-sm font-semibold mb-1">
-              URL de entradas <span class="text-gray-500 font-normal">(opcional)</span>
-            </label>
-            <input
-              type="url"
-              id="ticket_url"
-              name="ticket_url"
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label for="announce_at" class="block text-sm font-semibold mb-1">Publicar a partir de</label>
-            <input
-              type="datetime-local"
-              id="announce_at"
-              name="announce_at"
-              required
-              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="w-full min-h-11 rounded-md bg-band-sea text-band-dark font-semibold py-3 mt-4"
-            style="margin-bottom: env(safe-area-inset-bottom);"
+        <form id="alta-form" novalidate>
+          <div
+            id="form-error-banner"
+            class="hidden bg-band-red/20 border border-band-red text-band-red text-sm rounded-md px-3 py-2 mb-4"
+            role="alert"
           >
-            Publicar concierto
-          </button>
+            Faltan datos obligatorios — revisa los campos marcados en rojo.
+          </div>
+
+          <section class="bg-band-dark-100 rounded-lg p-6 space-y-4">
+            <h2 class="font-metal font-semibold text-xl text-white border-b border-band-sea pb-2 mb-4">
+              Datos del concierto
+            </h2>
+
+            <div>
+              <label for="title" class="block text-sm font-semibold mb-1">
+                Título <span class="text-band-sea">*</span>
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none overflow-hidden text-ellipsis whitespace-nowrap"
+              />
+              <span data-error-for="title" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+
+            <div>
+              <label for="date" class="block text-sm font-semibold mb-1">
+                Fecha <span class="text-band-sea">*</span>
+              </label>
+              <input
+                type="date"
+                id="date"
+                name="date"
+                required
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+              />
+              <span data-error-for="date" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+
+            <div>
+              <label for="time" class="block text-sm font-semibold mb-1">
+                Hora <span class="text-band-sea">*</span>
+              </label>
+              <input
+                type="time"
+                id="time"
+                name="time"
+                required
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+              />
+              <span data-error-for="time" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+
+            <div>
+              <label for="announce_at" class="block text-sm font-semibold mb-1">
+                Publicar a partir de <span class="text-band-sea">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                id="announce_at"
+                name="announce_at"
+                required
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+              />
+              <span data-error-for="announce_at" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+          </section>
+
+          <section class="bg-band-dark-100 rounded-lg p-6 space-y-4 mt-6">
+            <h2 class="font-metal font-semibold text-xl text-white border-b border-band-sea pb-2 mb-4">
+              Ubicación
+            </h2>
+
+            <div>
+              <label for="venue" class="block text-sm font-semibold mb-1">
+                Sala <span class="text-band-sea">*</span>
+              </label>
+              <input
+                type="text"
+                id="venue"
+                name="venue"
+                required
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none overflow-hidden text-ellipsis whitespace-nowrap"
+              />
+              <span data-error-for="venue" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+
+            <div>
+              <label for="city" class="block text-sm font-semibold mb-1">
+                Ciudad <span class="text-band-sea">*</span>
+              </label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                required
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none overflow-hidden text-ellipsis whitespace-nowrap"
+              />
+              <span data-error-for="city" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+
+            <div>
+              <label for="country" class="block text-sm font-semibold mb-1">
+                País <span class="text-band-sea">*</span>
+              </label>
+              <input
+                type="text"
+                id="country"
+                name="country"
+                value="Spain"
+                required
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none overflow-hidden text-ellipsis whitespace-nowrap"
+              />
+              <span data-error-for="country" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+
+            <div>
+              <label for="region" class="block text-sm font-semibold mb-1">
+                Provincia <span class="text-band-sea">*</span>
+              </label>
+              <input
+                type="text"
+                id="region"
+                name="region"
+                required
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none overflow-hidden text-ellipsis whitespace-nowrap"
+              />
+              <span data-error-for="region" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+
+            <div>
+              <label for="address" class="block text-sm font-semibold mb-1">
+                Dirección <span class="ml-1 text-xs font-normal text-gray-500">opcional</span>
+              </label>
+              <input
+                type="text"
+                id="address"
+                name="address"
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none overflow-hidden text-ellipsis whitespace-nowrap"
+              />
+            </div>
+
+            <div>
+              <label for="postal_code" class="block text-sm font-semibold mb-1">
+                Código postal <span class="ml-1 text-xs font-normal text-gray-500">opcional</span>
+              </label>
+              <input
+                type="text"
+                id="postal_code"
+                name="postal_code"
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none overflow-hidden text-ellipsis whitespace-nowrap"
+              />
+            </div>
+          </section>
+
+          <section class="bg-band-dark-100 rounded-lg p-6 space-y-4 mt-6">
+            <h2 class="font-metal font-semibold text-xl text-white border-b border-band-sea pb-2 mb-4">
+              Enlaces y material
+            </h2>
+
+            <div>
+              <label for="ticket_url" class="block text-sm font-semibold mb-1">
+                URL de entradas <span class="ml-1 text-xs font-normal text-gray-500">opcional</span>
+              </label>
+              <input
+                type="url"
+                id="ticket_url"
+                name="ticket_url"
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none overflow-hidden text-ellipsis whitespace-nowrap"
+              />
+              <span data-error-for="ticket_url" class="hidden text-xs text-band-red mt-1"></span>
+            </div>
+
+            <div>
+              <label for="lineup" class="block text-sm font-semibold mb-1">
+                Letra de invitados <span class="ml-1 text-xs font-normal text-gray-500">opcional</span>
+              </label>
+              <textarea
+                id="lineup"
+                name="lineup"
+                rows="3"
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none resize-none overflow-hidden"
+              ></textarea>
+            </div>
+
+            <div>
+              <label for="description" class="block text-sm font-semibold mb-1">
+                Descripción <span class="ml-1 text-xs font-normal text-gray-500">opcional</span>
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                rows="3"
+                class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none resize-none overflow-hidden"
+              ></textarea>
+            </div>
+          </section>
+
+          <div id="cancel-concierto-action" class="hidden mt-6 text-center">
+            <button type="button" id="cancel-concierto-btn" class="text-sm text-band-red underline">
+              Cancelar concierto
+            </button>
+          </div>
+
+          <div
+            class="sticky bottom-0 -mx-4 mt-12 bg-band-dark-100 px-4 pt-4"
+            style="padding-bottom: max(16px, env(safe-area-inset-bottom));"
+          >
+            <button
+              type="submit"
+              id="submit-btn"
+              class="w-full min-h-11 rounded-md bg-band-sea text-band-dark font-semibold py-3"
+            >
+              Publicar concierto
+            </button>
+          </div>
         </form>
       </div>
     </main>
+
+    <div
+      id="cancel-dialog-overlay"
+      class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
+    >
+      <div class="bg-band-dark-100 rounded-lg p-6 max-w-sm w-full border border-band-red/40">
+        <p class="text-sm text-gray-200 mb-6">
+          Esto marca el concierto como cancelado. El evento del calendario se elimina; la fila del
+          libro de cuentas y la carpeta del NAS se conservan como registro histórico. ¿Confirmas?
+        </p>
+        <div class="flex flex-col gap-3">
+          <button
+            type="button"
+            id="cancel-confirm-btn"
+            class="w-full min-h-11 rounded-md bg-band-red text-white font-semibold py-3"
+          >
+            Sí, cancelar concierto
+          </button>
+          <button
+            type="button"
+            id="cancel-dismiss-btn"
+            class="w-full min-h-11 rounded-md bg-gray-700 text-white font-semibold py-3"
+          >
+            Volver
+          </button>
+        </div>
+      </div>
+    </div>
 
     <script is:inline nonce={nonce}>
       // JS plano a propósito (nada de "as Tipo"/genéricos): is:inline
       // significa que Astro no toca este contenido, así que cualquier
       // sintaxis de TypeScript llegaría literal al navegador y rompería el
       // parseo — el bug real que dejó el submit sin preventDefault en el
-      // intento real de Julen (Task 8).
-      //
-      // Precarga announce_at con el instante actual: el caso común es
-      // "publicar ya"; una fecha futura es el embargo deliberado (D3).
-      var announceAtInput = document.getElementById("announce_at");
-      if (announceAtInput) {
-        var now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        announceAtInput.value = now.toISOString().slice(0, 16);
+      // intento real de Julen (Task 8, 02-01).
+      var form = document.getElementById("alta-form");
+
+      // --- Prefill por query string y modo edición (D-10) -----------------
+      // Los valores de la query son DATOS: se asignan exclusivamente con la
+      // propiedad .value / .textContent de elementos del DOM, nunca
+      // interpretados como markup ni concatenados en HTML (mitiga T-02-07).
+      var params = new URLSearchParams(location.search);
+      var concertId = params.get("concert_id");
+
+      var simplePrefillFields = [
+        "title",
+        "date",
+        "time",
+        "venue",
+        "city",
+        "country",
+        "region",
+        "ticket_url",
+        "address",
+        "postal_code",
+        "lineup",
+        "description",
+      ];
+      for (var i = 0; i < simplePrefillFields.length; i++) {
+        var fieldName = simplePrefillFields[i];
+        if (params.has(fieldName) && form && form.elements[fieldName]) {
+          form.elements[fieldName].value = params.get(fieldName);
+        }
       }
 
-      var form = document.getElementById("alta-form");
+      // announce_at: precarga con el instante actual en modo alta (caso
+      // común: "publicar ya"), o con el valor de la query en modo edición —
+      // en ambos casos convertido de UTC a la forma local que pide
+      // datetime-local, y al enviar vuelve a UTC ISO (contrato de 02-01).
+      var announceAtInput = document.getElementById("announce_at");
+      if (announceAtInput) {
+        var announceAtSource = params.get("announce_at");
+        var announceAtDate = announceAtSource ? new Date(announceAtSource) : new Date();
+        var localAnnounceAt = new Date(announceAtDate.getTime() - announceAtDate.getTimezoneOffset() * 60000);
+        announceAtInput.value = localAnnounceAt.toISOString().slice(0, 16);
+      }
+
+      if (concertId) {
+        var pageTitleEl = document.getElementById("page-title");
+        if (pageTitleEl) {
+          pageTitleEl.textContent = "Editar concierto — " + (params.get("title") || "");
+        }
+        var emptyStateWrapper = document.getElementById("empty-state-wrapper");
+        if (emptyStateWrapper) emptyStateWrapper.style.display = "none";
+        var submitBtn = document.getElementById("submit-btn");
+        if (submitBtn) submitBtn.textContent = "Guardar cambios";
+        var cancelAction = document.getElementById("cancel-concierto-action");
+        if (cancelAction) cancelAction.classList.remove("hidden");
+      }
+
+      // --- Textareas que crecen con el contenido (UI-SPEC long-text/form) -
+      var growableTextareas = document.querySelectorAll("textarea");
+      for (var t = 0; t < growableTextareas.length; t++) {
+        growableTextareas[t].addEventListener("input", function () {
+          this.style.height = "auto";
+          this.style.height = this.scrollHeight + "px";
+        });
+      }
+
+      // --- Validación cliente (UI-SPEC error/form) -------------------------
+      // UX únicamente: la frontera de seguridad sigue siendo la
+      // re-validación server-side del bot (RESEARCH Pitfall 5).
+      function validateForm() {
+        var errorList = [];
+        var requiredFields = ["title", "date", "time", "venue", "city", "country", "region", "announce_at"];
+        for (var i = 0; i < requiredFields.length; i++) {
+          var name = requiredFields[i];
+          var el = form.elements[name];
+          if (!el || !el.value || !el.value.trim()) {
+            errorList.push([name, "Campo obligatorio"]);
+          }
+        }
+
+        var timeEl = form.elements["time"];
+        if (timeEl && timeEl.value && timeEl.value.trim() && !/^\d{2}:\d{2}$/.test(timeEl.value.trim())) {
+          errorList.push(["time", "Usa el formato HH:MM"]);
+        }
+
+        var ticketUrlEl = form.elements["ticket_url"];
+        if (ticketUrlEl && ticketUrlEl.value && ticketUrlEl.value.trim()) {
+          var ticketUrlValue = ticketUrlEl.value.trim();
+          if (ticketUrlValue.indexOf("http://") !== 0 && ticketUrlValue.indexOf("https://") !== 0) {
+            errorList.push(["ticket_url", "La URL de entradas no parece válida"]);
+          }
+        }
+
+        return errorList;
+      }
+
+      function clearErrors() {
+        var banner = document.getElementById("form-error-banner");
+        if (banner) banner.classList.add("hidden");
+
+        var errorSpans = form.querySelectorAll("[data-error-for]");
+        for (var i = 0; i < errorSpans.length; i++) {
+          errorSpans[i].textContent = "";
+          errorSpans[i].classList.add("hidden");
+        }
+
+        var fields = form.querySelectorAll("input, textarea");
+        for (var j = 0; j < fields.length; j++) {
+          fields[j].classList.remove("border-band-red");
+        }
+      }
+
+      function showErrors(errorList) {
+        var banner = document.getElementById("form-error-banner");
+        if (banner) banner.classList.remove("hidden");
+
+        var firstInvalidField = null;
+        for (var i = 0; i < errorList.length; i++) {
+          var fieldName = errorList[i][0];
+          var message = errorList[i][1];
+          var field = form.elements[fieldName];
+          var errorSpan = form.querySelector('[data-error-for="' + fieldName + '"]');
+
+          if (field) {
+            field.classList.add("border-band-red");
+            if (!firstInvalidField) firstInvalidField = field;
+          }
+          if (errorSpan) {
+            errorSpan.textContent = message;
+            errorSpan.classList.remove("hidden");
+          }
+        }
+
+        if (firstInvalidField) firstInvalidField.focus();
+      }
+
+      // --- Submit: construir el payload y enviarlo por sendData -----------
       if (form) {
         form.addEventListener("submit", function (event) {
           event.preventDefault();
+          clearErrors();
+
+          var errorList = validateForm();
+          if (errorList.length > 0) {
+            showErrors(errorList);
+            return;
+          }
+
           var data = new FormData(form);
           // announce_at es el único campo cuya forma exacta produce este
           // script (UTC ISO-8601 con milisegundos y Z, la forma de
@@ -223,8 +502,47 @@ Astro.response.headers.set(
             ticket_url: data.get("ticket_url"),
             announce_at: new Date(announceAtRaw).toISOString(),
           };
+
+          // Claves opcionales: solo viajan si el campo va relleno.
+          var address = data.get("address");
+          if (address && address.trim()) payload.address = address;
+          var postalCode = data.get("postal_code");
+          if (postalCode && postalCode.trim()) payload.postal_code = postalCode;
+          var lineup = data.get("lineup");
+          if (lineup && lineup.trim()) payload.lineup = lineup;
+          var description = data.get("description");
+          if (description && description.trim()) payload.description = description;
+
+          // concert_id nunca es un input editable (D5): se relee de la query
+          // string, no del DOM del formulario.
+          if (concertId) payload.concert_id = concertId;
+
           if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.sendData(JSON.stringify(payload));
+          }
+        });
+      }
+
+      // --- Cancelar concierto (D-12, lado formulario) ----------------------
+      var cancelConciertoBtn = document.getElementById("cancel-concierto-btn");
+      var cancelDialogOverlay = document.getElementById("cancel-dialog-overlay");
+      var cancelConfirmBtn = document.getElementById("cancel-confirm-btn");
+      var cancelDismissBtn = document.getElementById("cancel-dismiss-btn");
+
+      if (cancelConciertoBtn && cancelDialogOverlay) {
+        cancelConciertoBtn.addEventListener("click", function () {
+          cancelDialogOverlay.classList.remove("hidden");
+        });
+      }
+      if (cancelDismissBtn && cancelDialogOverlay) {
+        cancelDismissBtn.addEventListener("click", function () {
+          cancelDialogOverlay.classList.add("hidden");
+        });
+      }
+      if (cancelConfirmBtn) {
+        cancelConfirmBtn.addEventListener("click", function () {
+          if (concertId && window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.sendData(JSON.stringify({ concert_id: concertId, action: "cancel" }));
           }
         });
       }

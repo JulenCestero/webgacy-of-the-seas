@@ -99,6 +99,11 @@ const googleCalendarEventUrl = "https://calendar.google.com/calendar/render?" + 
       <span class={`text-xs ${isPast ? 'text-gray-600' : 'text-gray-500'}`}>
         {date.getFullYear()}
       </span>
+      {hasStartTime && (
+        <span class={`text-xs ${isPast ? 'text-gray-600' : 'text-gray-500'}`}>
+          {trimmedStartTime} h
+        </span>
+      )}
     </div>
 
     <!-- Content -->

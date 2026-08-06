@@ -52,6 +52,11 @@ function formatDate(dateStr: string): string {
           const day = date.getDate();
           const month = date.toLocaleDateString("es-ES", { month: "short" }).toUpperCase();
           const year = date.getFullYear();
+          // WEB-02: mismo guard de forma que ConcertCard.astro (líneas
+          // 45-46) — nunca truthiness — aplicado sobre concert.startTime, que
+          // ya viene en cada fila de la propia query de este componente.
+          const trimmedStartTime = concert.startTime?.slice(0, 5) ?? "";
+          const hasStartTime = /^\d{2}:\d{2}$/.test(trimmedStartTime);
           return (
             <article class="bg-band-dark/80 backdrop-blur-sm border border-band-sea/20 rounded-lg overflow-hidden hover:border-band-sea/50 hover:shadow-[0_0_30px_rgba(0,206,209,0.15)] transition-all duration-300 group">
               <div class="flex">
@@ -60,6 +65,9 @@ function formatDate(dateStr: string): string {
                   <span class="text-3xl font-bold text-band-sea">{day}</span>
                   <span class="text-xs text-band-sea/80 uppercase tracking-wider">{month}</span>
                   <span class="text-xs text-gray-400">{year}</span>
+                  {hasStartTime && (
+                    <span class="text-xs text-gray-400">{trimmedStartTime} h</span>
+                  )}
                 </div>
 
                 <!-- Content column -->

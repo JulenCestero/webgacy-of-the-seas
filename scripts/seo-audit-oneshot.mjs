@@ -40,7 +40,11 @@ if (!rawArg) {
 // Accept a bare path ("/conciertos"), a path with trailing slash, or a full URL.
 function toAbsolute(input) {
   if (/^https?:\/\//.test(input)) return input;
-  const p = input.startsWith('/') ? input : `/${input}`;
+  // Git Bash (MSYS) rewrites a leading "/" into the install prefix, so "/conciertos"
+  // arrives as "C:/Program Files/Git/conciertos" and the audit silently inspects a
+  // URL nobody asked about. Strip it back rather than reporting on the wrong page.
+  const demangled = input.replace(/^[A-Za-z]:[\\/].*?[\\/]Git[\\/]/, '/');
+  const p = demangled.startsWith('/') ? demangled : `/${demangled}`;
   return `${SITE}${p}`;
 }
 const inputUrl = toAbsolute(rawArg);
@@ -244,8 +248,7 @@ async function checkIndexation() {
       lines.push('NO VERIFICABLE — la API respondió sin coverageState (respuesta inesperada).');
       return lines;
     }
-    const isIndexed = r.coverageState.toLowerCase().includes('indexed') || r.verdict === 'PASS';
-    lines.push(`${isIndexed ? 'SÍ' : 'NO'} — coverageState: "${r.coverageState}" (verdict: ${r.verdict ?? 'N/D'})`);
+    lines.push(`${classifyIndexation(r.verdict)} — coverageState: "${r.coverageState}" (verdict: ${r.verdict ?? 'N/D'})`);
     if (r.lastCrawlTime) lines.push(`Último crawl de Google: ${r.lastCrawlTime}`);
     if (r.robotsTxtState) lines.push(`robots.txt state: ${r.robotsTxtState}`);
     lines.push(`URL inspeccionada: ${canonicalUrl}`);
@@ -266,7 +269,45 @@ async function fetchSafe(url) {
   }
 }
 
+// Classify from the `verdict` enum, never from substring-matching coverageState:
+// "Discovered - currently not indexed" and "Crawled - currently not indexed" both
+// contain "indexed", so a substring test reports an explicitly non-indexed page as
+// indexed. An absent or unrecognised verdict is the third state, not a "no".
+function classifyIndexation(verdict) {
+  if (verdict === 'PASS') return 'SÍ';
+  if (verdict === 'FAIL' || verdict === 'NEUTRAL' || verdict === 'PARTIAL') return 'NO';
+  return 'NO VERIFICABLE';
+}
+
+function selfTest() {
+  const cases = [
+    ['PASS', 'SÍ'],
+    ['NEUTRAL', 'NO'],
+    ['FAIL', 'NO'],
+    ['PARTIAL', 'NO'],
+    ['VERDICT_UNSPECIFIED', 'NO VERIFICABLE'],
+    [undefined, 'NO VERIFICABLE'],
+  ];
+  let bad = 0;
+  for (const [verdict, want] of cases) {
+    const got = classifyIndexation(verdict);
+    const ok = got === want;
+    if (!ok) bad++;
+    console.log(`${ok ? 'PASS' : 'FAIL'}: verdict=${verdict} -> ${got} (esperado ${want})`);
+  }
+  // The regression this guards: these real coverageState values all contain
+  // "indexed" but mean the opposite.
+  for (const cs of ['Discovered - currently not indexed', 'Crawled - currently not indexed']) {
+    const ok = classifyIndexation('NEUTRAL') === 'NO';
+    if (!ok) bad++;
+    console.log(`${ok ? 'PASS' : 'FAIL'}: "${cs}" no se reporta como indexada`);
+  }
+  console.log(`\nSELFTEST: ${bad === 0 ? 'PASS' : `FAIL (${bad})`}`);
+  process.exit(bad === 0 ? 0 : 1);
+}
+
 async function main() {
+  if (process.argv.includes('--self-test')) return selfTest();
   console.log(`=== SEO audit on-demand: ${canonicalUrl} ===\n`);
 
   section('1. Trailing-slash / canonical', await checkTrailingSlash());

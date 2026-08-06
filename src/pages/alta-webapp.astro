@@ -1,0 +1,203 @@
+---
+// Mini App de Telegram para el alta de concierto (D-04/D-05, ALTA-01, WEB-01).
+//
+// Página SSR pública sin lectura de datos: no importa nada de "../lib/db" ni
+// consulta Turso — el prefill de edición (02-04) llegará solo por query
+// string, nunca por una lectura en vivo (prohibición de must_haves 02-01).
+//
+// La cabecera de frames heredada del fichero de cabeceras global del sitio
+// ni siquiera aplica a rutas SSR en Cloudflare Pages, y su equivalente en
+// código bloquearía el iframe cross-origin del cliente web de Telegram. Por
+// eso esta página fija su ÚNICA cabecera de seguridad aquí, en código, con
+// el frame-ancestors correcto para el WebView (RESEARCH Pattern 1). No
+// heredar ni replicar la cabecera de frames del sitio en esta página.
+Astro.response.headers.set(
+  "Content-Security-Policy",
+  "default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; frame-ancestors https://web.telegram.org https://telegram.org;"
+);
+---
+
+<!doctype html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Dar de alta un concierto | Legacy of the Seas</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      @import "../styles/global.css";
+
+      body {
+        background-color: #0a0a0a;
+      }
+
+      input,
+      textarea {
+        font-size: 16px; /* piso duro: por debajo dispara el auto-zoom de iOS dentro del WebView */
+      }
+    </style>
+  </head>
+  <body class="bg-band-dark text-white font-body min-h-screen">
+    <main
+      class="mx-auto max-w-md px-4"
+      style="padding-top: max(24px, env(safe-area-inset-top)); padding-bottom: max(24px, env(safe-area-inset-bottom));"
+    >
+      <h1 class="font-metal text-[28px] leading-tight text-band-sea mt-4 mb-2">
+        Dar de alta un concierto
+      </h1>
+
+      <div class="bg-band-dark-100 rounded-lg p-6 mt-6">
+        <h2 class="font-metal text-xl text-white mb-2">Nuevo concierto</h2>
+        <p class="text-sm text-gray-400 mb-6">
+          Rellena los datos obligatorios y pulsa Publicar. El cartel, la letra de invitados y la
+          descripción se pueden añadir más tarde.
+        </p>
+
+        <form id="alta-form" class="space-y-4">
+          <div>
+            <label for="title" class="block text-sm font-semibold mb-1">Título</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label for="date" class="block text-sm font-semibold mb-1">Fecha</label>
+            <input
+              type="date"
+              id="date"
+              name="date"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label for="time" class="block text-sm font-semibold mb-1">Hora</label>
+            <input
+              type="time"
+              id="time"
+              name="time"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label for="venue" class="block text-sm font-semibold mb-1">Sala</label>
+            <input
+              type="text"
+              id="venue"
+              name="venue"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label for="city" class="block text-sm font-semibold mb-1">Ciudad</label>
+            <input
+              type="text"
+              id="city"
+              name="city"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label for="country" class="block text-sm font-semibold mb-1">País</label>
+            <input
+              type="text"
+              id="country"
+              name="country"
+              value="Spain"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label for="region" class="block text-sm font-semibold mb-1">Provincia</label>
+            <input
+              type="text"
+              id="region"
+              name="region"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label for="ticket_url" class="block text-sm font-semibold mb-1">URL de entradas</label>
+            <input
+              type="url"
+              id="ticket_url"
+              name="ticket_url"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label for="announce_at" class="block text-sm font-semibold mb-1">Publicar a partir de</label>
+            <input
+              type="datetime-local"
+              id="announce_at"
+              name="announce_at"
+              required
+              class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full min-h-11 rounded-md bg-band-sea text-band-dark font-semibold py-3 mt-4"
+            style="margin-bottom: env(safe-area-inset-bottom);"
+          >
+            Publicar concierto
+          </button>
+        </form>
+      </div>
+    </main>
+
+    <script>
+      // Precarga announce_at con el instante actual: el caso común es
+      // "publicar ya"; una fecha futura es el embargo deliberado (D3).
+      const announceAtInput = document.getElementById("announce_at") as HTMLInputElement;
+      if (announceAtInput) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        announceAtInput.value = now.toISOString().slice(0, 16);
+      }
+
+      const form = document.getElementById("alta-form") as HTMLFormElement;
+      form?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        // announce_at es el único campo cuya forma exacta produce este script
+        // (UTC ISO-8601 con milisegundos y Z, la forma de
+        // Date.prototype.toISOString): el bot valida y almacena tal cual,
+        // nunca reformatea.
+        const announceAtRaw = data.get("announce_at") as string;
+        const payload = {
+          title: data.get("title"),
+          date: data.get("date"),
+          time: data.get("time"),
+          venue: data.get("venue"),
+          city: data.get("city"),
+          country: data.get("country"),
+          region: data.get("region"),
+          ticket_url: data.get("ticket_url"),
+          announce_at: new Date(announceAtRaw).toISOString(),
+        };
+        // @ts-expect-error - Telegram inyecta esta global en el WebView
+        window.Telegram?.WebApp?.sendData(JSON.stringify(payload));
+      });
+    </script>
+  </body>
+</html>

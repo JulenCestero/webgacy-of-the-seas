@@ -12,17 +12,28 @@
 // el frame-ancestors correcto para el WebView (RESEARCH Pattern 1). No
 // heredar ni replicar la cabecera de frames del sitio en esta página.
 //
-// Nonce por request, sin comodines de origen abierto en script-src/style-src:
-// esta página es SSR (sin `prerender = true`), así que un nonce fresco en
-// cada respuesta es correcto — con prerender el mismo nonce se serviría a
-// todas las peticiones y dejaría de ser un secreto de un solo uso.
-// `script-src` también permite `https://telegram.org` para el
-// `<script src=...>` externo de la línea de abajo, que carga por origen, no
-// por nonce.
+// Verificado en el build real (dist/, servido con wrangler pages dev) antes
+// de fijar esta estrategia, porque las dos anteriores fallaron en producción:
+// - Un <style> plano SÍ se extrae a /_astro/*.css servido por origen (visto
+//   como <link rel="stylesheet">) — 'self' en style-src le basta, sin nonce.
+// - Un <script> plano (sin atributos) NO se extrae a un fichero externo en
+//   este sitio: sale <script type="module"> con el código YA compilado (TS
+//   fuera) pero inline en el propio HTML. 'self' no cubre contenido inline,
+//   así que ese script quedaría bloqueado por la CSP igual que antes.
+// - Un <script nonce={nonce}> (sin is:inline) SÍ compila el TypeScript, pero
+//   Astro trata cualquier atributo ajeno como señal de "no tocar el
+//   contenido" y lo deja pasar SIN bundlear: el `as HTMLInputElement` llega
+//   literal al navegador, SyntaxError, el listener de submit nunca se
+//   adjunta, submit nativo, recarga — el bug real que rompió el Task 8 de Julen.
+// Solución: `is:inline` + nonce + JS plano de mano (sin sintaxis TypeScript).
+// `is:inline` le dice a Astro "no toques el CONTENIDO", así que lo que
+// escribo aquí sale exactamente igual — sin sorpresas de compilación — y el
+// nonce (un atributo, no contenido) se evalúa igual en cada request porque
+// eso es plantillado normal de Astro, independiente de is:inline.
 const nonce = crypto.randomUUID();
 Astro.response.headers.set(
   "Content-Security-Policy",
-  `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://telegram.org; style-src 'self' 'nonce-${nonce}'; frame-ancestors https://web.telegram.org https://telegram.org;`
+  `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://telegram.org; style-src 'self'; frame-ancestors https://web.telegram.org https://telegram.org;`
 );
 ---
 
@@ -32,8 +43,8 @@ Astro.response.headers.set(
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Dar de alta un concierto | Legacy of the Seas</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style nonce={nonce}>
+    <script is:inline src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
       @import "../styles/global.css";
 
       body {
@@ -142,12 +153,13 @@ Astro.response.headers.set(
           </div>
 
           <div>
-            <label for="ticket_url" class="block text-sm font-semibold mb-1">URL de entradas</label>
+            <label for="ticket_url" class="block text-sm font-semibold mb-1">
+              URL de entradas <span class="text-gray-500 font-normal">(opcional)</span>
+            </label>
             <input
               type="url"
               id="ticket_url"
               name="ticket_url"
-              required
               class="w-full min-h-11 rounded-md bg-band-dark-100 border border-band-sea/20 px-3 py-2 text-white focus:border-band-sea focus:outline-none"
             />
           </div>
@@ -174,39 +186,48 @@ Astro.response.headers.set(
       </div>
     </main>
 
-    <script nonce={nonce}>
+    <script is:inline nonce={nonce}>
+      // JS plano a propósito (nada de "as Tipo"/genéricos): is:inline
+      // significa que Astro no toca este contenido, así que cualquier
+      // sintaxis de TypeScript llegaría literal al navegador y rompería el
+      // parseo — el bug real que dejó el submit sin preventDefault en el
+      // intento real de Julen (Task 8).
+      //
       // Precarga announce_at con el instante actual: el caso común es
       // "publicar ya"; una fecha futura es el embargo deliberado (D3).
-      const announceAtInput = document.getElementById("announce_at") as HTMLInputElement;
+      var announceAtInput = document.getElementById("announce_at");
       if (announceAtInput) {
-        const now = new Date();
+        var now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         announceAtInput.value = now.toISOString().slice(0, 16);
       }
 
-      const form = document.getElementById("alta-form") as HTMLFormElement;
-      form?.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const data = new FormData(form);
-        // announce_at es el único campo cuya forma exacta produce este script
-        // (UTC ISO-8601 con milisegundos y Z, la forma de
-        // Date.prototype.toISOString): el bot valida y almacena tal cual,
-        // nunca reformatea.
-        const announceAtRaw = data.get("announce_at") as string;
-        const payload = {
-          title: data.get("title"),
-          date: data.get("date"),
-          time: data.get("time"),
-          venue: data.get("venue"),
-          city: data.get("city"),
-          country: data.get("country"),
-          region: data.get("region"),
-          ticket_url: data.get("ticket_url"),
-          announce_at: new Date(announceAtRaw).toISOString(),
-        };
-        // @ts-expect-error - Telegram inyecta esta global en el WebView
-        window.Telegram?.WebApp?.sendData(JSON.stringify(payload));
-      });
+      var form = document.getElementById("alta-form");
+      if (form) {
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          var data = new FormData(form);
+          // announce_at es el único campo cuya forma exacta produce este
+          // script (UTC ISO-8601 con milisegundos y Z, la forma de
+          // Date.prototype.toISOString): el bot valida y almacena tal cual,
+          // nunca reformatea.
+          var announceAtRaw = data.get("announce_at");
+          var payload = {
+            title: data.get("title"),
+            date: data.get("date"),
+            time: data.get("time"),
+            venue: data.get("venue"),
+            city: data.get("city"),
+            country: data.get("country"),
+            region: data.get("region"),
+            ticket_url: data.get("ticket_url"),
+            announce_at: new Date(announceAtRaw).toISOString(),
+          };
+          if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.sendData(JSON.stringify(payload));
+          }
+        });
+      }
     </script>
   </body>
 </html>

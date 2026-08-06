@@ -11,9 +11,18 @@
 // eso esta página fija su ÚNICA cabecera de seguridad aquí, en código, con
 // el frame-ancestors correcto para el WebView (RESEARCH Pattern 1). No
 // heredar ni replicar la cabecera de frames del sitio en esta página.
+//
+// Nonce por request, sin comodines de origen abierto en script-src/style-src:
+// esta página es SSR (sin `prerender = true`), así que un nonce fresco en
+// cada respuesta es correcto — con prerender el mismo nonce se serviría a
+// todas las peticiones y dejaría de ser un secreto de un solo uso.
+// `script-src` también permite `https://telegram.org` para el
+// `<script src=...>` externo de la línea de abajo, que carga por origen, no
+// por nonce.
+const nonce = crypto.randomUUID();
 Astro.response.headers.set(
   "Content-Security-Policy",
-  "default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org; style-src 'self' 'unsafe-inline'; frame-ancestors https://web.telegram.org https://telegram.org;"
+  `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://telegram.org; style-src 'self' 'nonce-${nonce}'; frame-ancestors https://web.telegram.org https://telegram.org;`
 );
 ---
 
@@ -24,7 +33,7 @@ Astro.response.headers.set(
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Dar de alta un concierto | Legacy of the Seas</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
+    <style nonce={nonce}>
       @import "../styles/global.css";
 
       body {
@@ -165,7 +174,7 @@ Astro.response.headers.set(
       </div>
     </main>
 
-    <script>
+    <script nonce={nonce}>
       // Precarga announce_at con el instante actual: el caso común es
       // "publicar ya"; una fecha futura es el embargo deliberado (D3).
       const announceAtInput = document.getElementById("announce_at") as HTMLInputElement;

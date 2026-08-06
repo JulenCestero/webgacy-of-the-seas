@@ -33,6 +33,18 @@ export async function GET(context: APIContext): Promise<Response> {
     });
   }
 
+  // Embargo por announce_at (D3, WEB-01): un id es adivinable (YYYYMMDD-slug,
+  // contrato publicado D5) y responde con EXACTAMENTE el mismo cuerpo/cabecera
+  // que el branch de id inexistente — un tercero no puede distinguir "no
+  // existe" de "embargado", misma política que el guard de pasados de abajo.
+  const nowIso = new Date().toISOString();
+  if ((concert.announceAt ?? "") > nowIso) {
+    return new Response("Concierto no encontrado.", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+
   // Past concerts get no calendar file. ConcertCard only renders the button
   // for upcoming ones, but the URL is guessable and links get shared, so the
   // rule is enforced here too rather than only hidden in the UI — same policy

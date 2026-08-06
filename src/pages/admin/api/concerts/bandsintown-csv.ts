@@ -127,7 +127,14 @@ export async function GET(context: APIContext): Promise<Response> {
   // dumped into their agenda.) Compared as YYYY-MM-DD strings, which is how
   // `date` is stored, so today's gig still counts as upcoming.
   const today = new Date().toISOString().slice(0, 10);
-  const upcoming = allConcerts.filter((c) => (c.date ?? "") >= today);
+  // Embargo por announce_at (D3, WEB-01, RESEARCH Pitfall 4): aunque BIT-01 es
+  // Fase 3, este camino de lectura ya existe hoy y sin este filtro exportaría
+  // conciertos embargados a Bandsintown en cuanto la columna tenga valores
+  // reales. '' (filas legacy) compara <= cualquier ISO real y sigue exportable.
+  const nowIso = new Date().toISOString();
+  const upcoming = allConcerts.filter(
+    (c) => (c.date ?? "") >= today && (c.announceAt ?? "") <= nowIso,
+  );
 
   // CSV line endings: Bandsintown's own template ships with CRLF, so we
   // match that rather than assuming plain LF is fine for their importer.

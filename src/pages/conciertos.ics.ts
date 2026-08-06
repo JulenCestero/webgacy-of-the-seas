@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
 import { createDb, concerts } from "../lib/db";
-import { asc, gte } from "drizzle-orm";
+import { and, asc, gte, lte } from "drizzle-orm";
 import { buildCalendar } from "../lib/ics";
 
 export async function GET(context: APIContext): Promise<Response> {
@@ -22,10 +22,14 @@ export async function GET(context: APIContext): Promise<Response> {
   // behind as history. If we ever want a permanent record for fans, that
   // belongs in /archivo, not in the live subscription feed.
   const today = new Date().toISOString().slice(0, 10);
+  // Embargo por announce_at (D3, WEB-01): mismo shape que conciertos.astro,
+  // se añade al filtro de fecha existente, no lo sustituye (RESEARCH
+  // Pitfall 4). '' (filas legacy) compara <= cualquier ISO real.
+  const nowIso = new Date().toISOString();
   const upcomingConcerts = await db
     .select()
     .from(concerts)
-    .where(gte(concerts.date, today))
+    .where(and(gte(concerts.date, today), lte(concerts.announceAt, nowIso)))
     .orderBy(asc(concerts.date));
 
   const body = buildCalendar(upcomingConcerts, {

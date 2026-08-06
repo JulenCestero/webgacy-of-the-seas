@@ -1,7 +1,7 @@
 ---
 // Preview de próximos conciertos para la home
 import { createDb, concerts } from "../lib/db";
-import { asc, gte } from "drizzle-orm";
+import { asc, gte, and, lte } from "drizzle-orm";
 
 interface Props {
   runtimeEnv?: Record<string, string>;
@@ -12,8 +12,12 @@ const db = createDb(runtimeEnv);
 
 // Get upcoming concerts (max 3) from database
 const now = new Date().toISOString().split('T')[0];
+// Embargo por announce_at (D3, WEB-01): mismo shape que conciertos.astro.
+// '' (filas legacy sin bot) compara lexicográficamente <= cualquier ISO
+// real, así que siguen visibles sin backfill.
+const nowIso = new Date().toISOString();
 const upcomingConcerts = await db.select().from(concerts)
-  .where(gte(concerts.date, now))
+  .where(and(gte(concerts.date, now), lte(concerts.announceAt, nowIso)))
   .orderBy(asc(concerts.date))
   .limit(3);
 

@@ -30,6 +30,15 @@ export const concerts = sqliteTable('concerts', {
   startTime: text('start_time').default('20:00'), // 'HH:MM'
   createdAt: text('created_at').default(''),
   updatedAt: text('updated_at').default(''),
+  // Campos del alta de concierto núcleo (Fase 2 — ver .planning/phases/02-alta-de-concierto-n-cleo)
+  announceAt: text('announce_at').notNull().default(''), // ISO-8601 UTC con ms y Z; '' = fila legacy ya publicada
+  status: text('status').notNull().default(''), // borrador->confirmado->anunciado->celebrado->cerrado; '' = fila legacy pre-bot
+  lineup: text('lineup'),
+  address: text('address'),
+  postalCode: text('postal_code'),
+  bandsintownUrl: text('bandsintown_url'),
+  calendarEventId: text('calendar_event_id'),
+  effects: text('effects').notNull().default('{}'), // JSON {efecto: "ok"|"pending"|"failed"}
 });
 
 // Productos de merchandising

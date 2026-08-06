@@ -15,6 +15,13 @@
       "when": 1785838215921,
       "tag": "0001_concerts_bandsintown_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786000380069,
+      "tag": "0002_alta_nucleo_fields",
+      "breakpoints": true
     }
   ]
 }

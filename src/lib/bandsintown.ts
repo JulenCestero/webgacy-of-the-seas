@@ -7,11 +7,7 @@
  * lands in 03-06 with the first real capture.
  */
 
-/** Legacy of the Seas' Bandsintown artist name, used as `data-artist-name`.
- * The robust `id_<numeric>` form needs the numeric artist ID from the
- * Bandsintown dashboard, which only Julen can pull — 03-05 upgrades this
- * same constant once that ID is available. This is the single edit point. */
-export const BIT_ARTIST_NAME = "Legacy of the Seas";
+export const BIT_ARTIST_NAME = "id_15556909";
 
 export const BIT_WIDGET_SCRIPT_URL = "https://widgetv3.bandsintown.com/main.min.js";
 

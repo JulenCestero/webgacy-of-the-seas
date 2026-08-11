@@ -1,5 +1,6 @@
 ---
 import { zonedTimeToUtc, formatUtcStamp, DEFAULT_TIMEZONE, DEFAULT_EVENT_DURATION_MS } from "../lib/ics";
+import { extractBitEventId, BIT_ARTIST_NAME } from "../lib/bandsintown";
 
 interface Props {
   id?: string;
@@ -12,6 +13,7 @@ interface Props {
   isPast?: boolean;
   startTime?: string | null;
   timezone?: string | null;
+  bandsintownUrl?: string | null;
 }
 
 const {
@@ -25,7 +27,12 @@ const {
   isPast = false,
   startTime,
   timezone,
+  bandsintownUrl,
 } = Astro.props;
+
+// WEB-03/D-07: scoping por evento. Fail-closed — sin ID numerico extraible
+// no se emite el widget (evita el fallback de BIT a "listar todos los shows").
+const bitEventId = bandsintownUrl ? extractBitEventId(bandsintownUrl) : null;
 
 // Format date
 const formattedDate = date.toLocaleDateString("es-ES", {
@@ -170,6 +177,22 @@ const googleCalendarEventUrl = "https://calendar.google.com/calendar/render?" + 
           )}
         </div>
       </div>
+
+      {!isPast && bitEventId && (
+        <div class="mt-2">
+          <a
+            class="bit-widget-initializer"
+            data-artist-name={BIT_ARTIST_NAME}
+            data-events-to-display={bitEventId}
+            data-background-color="rgba(10,10,10,1)"
+            data-separator-color="rgba(0,206,209,0.2)"
+            data-text-color="rgba(0,206,209,1)"
+            data-font="Inter"
+            data-auto-style="true"
+          >
+          </a>
+        </div>
+      )}
     </div>
   </div>
 </article>

@@ -325,3 +325,89 @@ expected pre-existing warnings: Cloudflare `sharp`-at-runtime note, two
 `src/pages/admin/api/upload.ts`, and the stale `browserslist` data notice.
 
 ---
+
+## 2026-08-12
+
+**Checked:** `seo-loop/.proposal-2026-08-12.md` (analyst stage) against live
+repo files. All 6 targets matched the proposal exactly — the 4 static
+subpages had no existing BreadcrumbList, conciertos and tienda already had
+`@graph` arrays to append to, and the two `<time>` elements in archivo pages
+lacked `datetime` attributes. No discrepancies, no adjustments needed.
+
+**Implemented** (both proposals, no deviations):
+
+1. **BreadcrumbList JSON-LD on 4 static subpages** — added a 2-item
+   BreadcrumbList (Inicio → page name) following the exact pattern from
+   `archivo/index.astro`:
+   - `src/pages/conciertos.astro`: appended breadcrumb to the existing
+     `@graph` array (alongside MusicEvent entries) via spread.
+   - `src/pages/tienda.astro`: appended breadcrumb to the existing `@graph`
+     array (alongside Product entries) via spread.
+   - `src/pages/nosotros.astro`: new `<script type="application/ld+json">`
+     block with `@graph` wrapper containing only the BreadcrumbList.
+   - `src/pages/contacto.astro`: same as nosotros — new standalone block.
+   Per guardrails: no generic breadcrumb component in BaseLayout, no
+   third-level breadcrumbs, existing `@graph` entries untouched.
+
+2. **`datetime` attribute on `<time>` elements** —
+   - `src/pages/archivo/index.astro` (post card): added `datetime={post.date}`
+     to the `<time>` tag. `post.date` is already ISO `YYYY-MM-DD` from the DB.
+   - `src/pages/archivo/[slug].astro` (article header): added
+     `datetime={post.date}` to the `<time>` tag. Display format
+     (`formattedDate`) and `formatDate()` untouched per guardrails.
+
+**Left for later** (carried forward from analyst entry below):
+- Core blocker remains non-code: 5/7 URLs unknown to Google, sitemap never
+  downloaded. Next escalation is manual "Request indexing" per URL in GSC UI,
+  custom domain, or backlinks — outside this pipeline.
+- `docs/seo-audit.md` still cites dead `sitemap-index.xml` / `sitemap-0.xml`
+  (noted 4th time, docs-only, not urgent).
+- Per-page OG images for static pages (content/design work).
+
+**Blockers**: none.
+
+**Build result**: `npm run build` — passed (see below).
+
+---
+
+## 2026-08-12 — Analyst run
+
+**GSC access**: Working (service account, JWT auth,
+`dangerouslyDisableSandbox: true` for outbound calls).
+
+**GSC findings (30-day window)**:
+- Homepage (`/`): indexed, last crawl 2026-08-06, verdict PASS.
+- `/contacto`: indexed, last crawl 2026-08-07, verdict PASS.
+- All 5 other URLs (`/conciertos`, `/nosotros`, `/tienda`, `/archivo`,
+  `/archivo/2024-10-04-lanzamiento-leyendas`): still `URL is unknown to
+  Google` — zero change from 2026-08-05.
+- Sitemap still never downloaded (`isPending: true`, last submitted
+  2026-08-04).
+- Search Analytics: 4 impressions (down from 8 last run), 0 clicks,
+  position 3.5, sole query "legacy of the seas".
+
+**On-page/technical pass**: Reviewed all 6 main pages + archivo/[slug]
+against prior progress entries and the seo-audit checklist. Confirmed prior
+work intact (canonical normalization, og:type article, gallery alt text,
+CollectionPage schema, MusicEvent schema completeness, internal cross-links).
+
+**Proposed this run** (see `.proposal-2026-08-12.md`):
+1. BreadcrumbList JSON-LD on 4 static subpages (conciertos, nosotros,
+   tienda, contacto) — last remaining Schema.org structural gap. Deferred
+   from 2026-08-05, now actionable.
+2. `datetime` attribute on `<time>` elements in archivo/index.astro and
+   archivo/[slug].astro — machine-readable dates in HTML to complement the
+   existing BlogPosting JSON-LD.
+
+**Left for future runs**:
+- The core blocker remains non-code: 5/7 URLs unknown to Google, sitemap
+  never downloaded. Next escalation is manual "Request indexing" per URL in
+  GSC UI, or a custom domain, or backlinks. Outside this pipeline.
+- `docs/seo-audit.md` still cites dead `sitemap-index.xml` / `sitemap-0.xml`
+  (noted 4th time, still docs-only, still not urgent).
+- Per-page OG images for static pages (content/design work).
+- No page-specific schema on nosotros or contacto beyond global
+  WebSite/MusicGroup + the BreadcrumbList proposed here. Low value without
+  Google recognizing a rich-result type for these page categories.
+
+---

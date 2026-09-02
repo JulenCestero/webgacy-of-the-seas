@@ -102,7 +102,7 @@ const schemaData = {
               <div class="p-6">
                 <!-- Date & Tags -->
                 <div class="flex items-center gap-3 mb-3">
-                  <time class="text-sm text-band-sea">
+                  <time class="text-sm text-band-sea" datetime={post.date}>
                     {formatDate(new Date(post.date))}
                   </time>
                   {tags.length > 0 && (

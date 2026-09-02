@@ -117,7 +117,7 @@ const schemaData = {
         <header class="mb-8">
           <!-- Date & Tags -->
           <div class="flex items-center gap-3 mb-4">
-            <time class="text-band-sea">{formattedDate}</time>
+            <time class="text-band-sea" datetime={post.date}>{formattedDate}</time>
             {tags.length > 0 && (
               <span class="text-gray-600">•</span>
               <div class="flex gap-2">

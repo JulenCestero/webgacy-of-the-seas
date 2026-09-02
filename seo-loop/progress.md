@@ -325,3 +325,52 @@ expected pre-existing warnings: Cloudflare `sharp`-at-runtime note, two
 `src/pages/admin/api/upload.ts`, and the stale `browserslist` data notice.
 
 ---
+
+## 2026-09-02
+
+**Checked:** `seo-loop/.proposal-2026-09-02.md` against current repo files.
+GSC snapshot from analyst: 2/7 indexed (homepage + /contacto), 7 impressions
+/ 0 clicks over 30d, sole query "legacy of the seas" at position 4.4. 5/7
+pages still unknown to Google — crawl budget/authority gap unchanged.
+
+**Implemented** (both proposals from analyst stage, no deviations — all
+targets matched exactly):
+
+1. **BreadcrumbList schema on 4 static subpages** — added a 2-item
+   `BreadcrumbList` ("Inicio" → page name) to each:
+   - `src/pages/conciertos.astro`: appended to existing `@graph` array
+     (alongside MusicEvent entries). Used spread: `[...eventsSchema,
+     breadcrumbSchema]`.
+   - `src/pages/tienda.astro`: appended to existing `@graph` array
+     (alongside Product entries). Same spread pattern.
+   - `src/pages/nosotros.astro`: new `<script type="application/ld+json">`
+     block with `{"@context": "https://schema.org", "@graph":
+     [breadcrumbSchema]}`.
+   - `src/pages/contacto.astro`: same new-block pattern as nosotros.
+   Follows the exact pattern from `src/pages/archivo/index.astro` (lines
+   52-63). Existing schema entries (MusicEvent, Product) untouched per
+   proposal guardrails.
+2. **`datetime` attribute on archive `<time>` elements** —
+   - `src/pages/archivo/index.astro`: added `datetime={post.date}` to the
+     `<time>` tag in the post listing card.
+   - `src/pages/archivo/[slug].astro`: added `datetime={post.date}` to the
+     `<time>` tag in the article header.
+   `post.date` is an ISO `YYYY-MM-DD` string from the DB — valid per HTML
+   spec. Display format (`formatDate`/`formattedDate`) untouched.
+
+**Left for later** (carried forward, nothing new deferred):
+- 5/7 URLs still unknown to Google — not fixable by code, same crawl
+  budget/authority gap.
+- Per-page OG images for static pages (content/design work).
+- `docs/seo-audit.md` stale `sitemap-index.xml` reference (noted again,
+  still docs-only, still low priority).
+
+**Blockers:** none.
+
+**Build result**: `npm run build` — passed (`astro build` completed, server
+built in 8.42s, client build ✓, prerendering ✓, no errors). Only pre-existing
+warnings: Cloudflare `sharp`-at-runtime note, two `node:fs`/`node:path`
+externalization warnings from `src/pages/admin/api/upload.ts`, and stale
+`browserslist` data notice.
+
+---

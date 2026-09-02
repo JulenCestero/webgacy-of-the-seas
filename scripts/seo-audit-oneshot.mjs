@@ -249,7 +249,7 @@ async function checkIndexation({ canonicalUrl }) {
 // --- helpers -----------------------------------------------------------------
 async function fetchSafe(url) {
   try {
-    const res = await fetch(url, { redirect: 'manual' });
+    const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(10000) });
     const body = await res.text().catch(() => null);
     return { status: res.status, body };
   } catch {

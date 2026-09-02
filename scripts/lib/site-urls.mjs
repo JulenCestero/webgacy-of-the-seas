@@ -40,10 +40,10 @@ export function fallbackUrls(site = SITE) {
 // Returns { urls, source: 'sitemap' | 'fallback', error }. Never throws:
 // a network failure degrades to the fallback list and says so in `source`,
 // so callers can tell "measured the real sitemap" from "guessed".
-export async function fetchSiteUrls(site = SITE, { timeoutMs = 10000 } = {}) {
+export async function fetchSiteUrls(site = SITE) {
   const base = normalizeSite(site);
   try {
-    const res = await fetch(`${base}/sitemap.xml`, { signal: AbortSignal.timeout(timeoutMs) });
+    const res = await fetch(`${base}/sitemap.xml`, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const xml = await res.text();
     const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => {
@@ -51,8 +51,8 @@ export async function fetchSiteUrls(site = SITE, { timeoutMs = 10000 } = {}) {
       return `${u.origin}${canonicalPath(u.pathname)}`;
     });
     if (urls.length === 0) throw new Error('sitemap has no <loc> entries');
-    return { urls: [...new Set(urls)], source: 'sitemap', error: null };
+    return { urls: [...new Set(urls)], source: 'sitemap' };
   } catch (e) {
-    return { urls: fallbackUrls(base), source: 'fallback', error: e.message };
+    return { urls: fallbackUrls(base), source: 'fallback' };
   }
 }

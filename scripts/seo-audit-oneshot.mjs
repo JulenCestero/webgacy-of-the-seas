@@ -1,14 +1,14 @@
-// On-demand SEO audit for one URL or path — the /seo-audit skill's engine.
+// On-demand SEO audit for one URL or path — the /seo-audit skill's engine —
+// and, with --all, the deterministic findings menu the weekly loop's analyst
+// picks from.
 //
 // Report-only: never writes, commits, or opens anything. It's the on-demand
-// sibling of seo-loop/ (see prompt-analyst.md), reusing that pipeline's GSC
-// JWT auth pattern (same as verify-gsc-credential.mjs / gsc-audit-check.mjs /
-// gsc-snapshot.mjs — copied rather than imported because those three already
-// duplicate the same ~20-line helper independently; that's the established
-// convention in this repo, not a new one) instead of inventing a second way
-// to talk to the Search Console API.
+// sibling of seo-loop/ (see prompt-analyst.md). GSC auth comes from
+// scripts/lib/gsc-auth.mjs (shared with verify-gsc-credential.mjs /
+// gsc-audit-check.mjs / gsc-snapshot.mjs); the URL list from
+// scripts/lib/site-urls.mjs (live sitemap, offline fallback).
 //
-// Checks, in order:
+// Checks, in order (single-URL mode):
 //   1. Trailing-slash / canonical normalization (see docs/seo-audit.md and
 //      ClaudeVault .raw/2026-08-04-sitemap-trailing-slash-urls-huerfanas.md —
 //      a sitemap listing a URL form nothing on the site links to orphans it).
@@ -19,21 +19,38 @@
 //      collapsing "Google said no" into "we couldn't ask" (see ClaudeVault
 //      .raw/2026-08-04-google-dice-no-vs-no-pude-preguntar.md).
 //
+// --all mode runs those per sitemap URL plus cheap page-hygiene checks
+// (title / meta description presence, length, duplicates; exactly one <h1>;
+// og:image; JSON-LD parses; canonical == self) and prints ONE JSON object:
+//   { generated_at, site, url_source, gsc, findings: [
+//       { id, url, check, severity, detail, gsc_state } ] }
+// severity ∈ blocks-index | blocks-rich-result | hygiene, sorted by severity
+// then url then check. `id` = "<check>:<path>" — stable across runs so the
+// analyst/verifier can cite it. gsc_state is the coverageState string or
+// "NO VERIFICABLE" (never invented, never crashes if the key/API is missing).
+//
 // Usage: node scripts/seo-audit-oneshot.mjs <url-or-path> [gsc-key-path]
-import { readFileSync } from 'node:fs';
-import { createSign } from 'node:crypto';
+//        node scripts/seo-audit-oneshot.mjs --all [--json] [gsc-key-path]
+//        node scripts/seo-audit-oneshot.mjs --self-test
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { loadServiceAccount, getAccessToken, GSC_READONLY_SCOPE } from './lib/gsc-auth.mjs';
+import { SITE, fetchSiteUrls, canonicalPath as toCanonicalPath } from './lib/site-urls.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
-const SITE = 'https://legacyoftheseas.pages.dev';
 
-const rawArg = process.argv[2];
-const KEY_PATH = process.argv[3] || path.join(REPO_ROOT, 'gsc-service-account.json');
+const argv = process.argv.slice(2);
+const flags = new Set(argv.filter((a) => a.startsWith('--')));
+const positional = argv.filter((a) => !a.startsWith('--'));
+const ALL_MODE = flags.has('--all');
 
-if (!rawArg) {
+const rawArg = ALL_MODE ? null : positional[0];
+const KEY_PATH = (ALL_MODE ? positional[0] : positional[1]) || path.join(REPO_ROOT, 'gsc-service-account.json');
+
+if (!rawArg && !ALL_MODE && !flags.has('--self-test')) {
   console.error('Usage: node scripts/seo-audit-oneshot.mjs <url-or-path> [gsc-key-path]');
+  console.error('       node scripts/seo-audit-oneshot.mjs --all [--json] [gsc-key-path]');
   process.exit(1);
 }
 
@@ -47,12 +64,12 @@ function toAbsolute(input) {
   const p = demangled.startsWith('/') ? demangled : `/${demangled}`;
   return `${SITE}${p}`;
 }
-const inputUrl = toAbsolute(rawArg);
-const inputPath = new URL(inputUrl).pathname;
 // Canonical form this repo standardizes on: no trailing slash except root
 // (must match src/pages/sitemap.xml.ts and Header.astro's navLinks).
-const canonicalPath = inputPath === '/' ? '/' : inputPath.replace(/\/$/, '');
-const canonicalUrl = `${SITE}${canonicalPath}`;
+function target(input) {
+  const canonicalPath = toCanonicalPath(new URL(toAbsolute(input)).pathname);
+  return { canonicalPath, canonicalUrl: `${SITE}${canonicalPath}` };
+}
 
 const out = { sections: [] };
 function section(title, lines) {
@@ -60,7 +77,7 @@ function section(title, lines) {
 }
 
 // --- 1. Trailing-slash / canonical normalization ---------------------------
-async function checkTrailingSlash() {
+async function checkTrailingSlash({ canonicalPath, canonicalUrl }) {
   const lines = [];
   const variantPath = canonicalPath === '/' ? null : `${canonicalPath}/`;
 
@@ -69,8 +86,7 @@ async function checkTrailingSlash() {
 
   let emittedCanonical = null;
   if (canonicalRes.body) {
-    const m = canonicalRes.body.match(/<link rel="canonical" href="([^"]+)"/);
-    emittedCanonical = m ? m[1] : null;
+    emittedCanonical = extractCanonical(canonicalRes.body);
     lines.push(`<link rel="canonical"> emitido: ${emittedCanonical ?? 'NO ENCONTRADO'}`);
     if (emittedCanonical && emittedCanonical !== canonicalUrl) {
       lines.push(`  DESAJUSTE: la página emite un canonical distinto de la URL solicitada (${emittedCanonical} != ${canonicalUrl}).`);
@@ -89,7 +105,7 @@ async function checkTrailingSlash() {
 }
 
 // --- 2. Sitemap vs internal-link parity -------------------------------------
-async function checkSitemapParity() {
+async function checkSitemapParity({ canonicalPath }) {
   const lines = [];
   const sitemapRes = await fetchSafe(`${SITE}/sitemap.xml`);
   if (!sitemapRes.body) {
@@ -106,16 +122,7 @@ async function checkSitemapParity() {
   // away) — expect them to show up as "sin enlace interno detectado" here;
   // that's this check's blind spot, not necessarily a real orphan.
   const homeRes = await fetchSafe(SITE);
-  const linkedPaths = new Set();
-  if (homeRes.body) {
-    // Anchor tags only — a bare href="..." regex also catches favicons,
-    // preload/stylesheet links, and hashed asset URLs, which are not
-    // navigable pages and would fill the "missing from sitemap" list with
-    // noise (CSS bundles, images) instead of real orphan pages.
-    for (const m of homeRes.body.matchAll(/<a\s[^>]*href="(\/[^"#]*)"/g)) {
-      linkedPaths.add(m[1].replace(/\/$/, '') || '/');
-    }
-  }
+  const linkedPaths = homeRes.body ? extractInternalLinks(homeRes.body) : new Set();
 
   const orphaned = [...sitemapPaths].filter((p) => !linkedPaths.has(p) && !linkedPaths.has(p.replace(/\/$/, '')));
   const unlisted = [...linkedPaths].filter((p) => p.startsWith('/') && !sitemapPaths.has(p) && p !== '/admin' && !/\.\w+$/.test(p));
@@ -141,32 +148,24 @@ async function checkSitemapParity() {
 const EVENT_REQUIRED = ['name', 'startDate', 'location'];
 const EVENT_RECOMMENDED = ['endDate', 'eventStatus', 'eventAttendanceMode', 'image', 'performer', 'offers', 'description'];
 
-async function checkSchema() {
+async function checkSchema({ canonicalUrl }) {
   const lines = [];
   const res = await fetchSafe(canonicalUrl);
   if (!res.body) {
     lines.push(`No se pudo leer la página (HTTP ${res.status ?? 'ERROR'}) — schema no verificable.`);
     return lines;
   }
-  const blocks = [...res.body.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)]
-    .map((m) => {
-      try { return JSON.parse(m[1]); } catch { return null; }
-    })
-    .filter(Boolean);
+  const { blocks } = parseJsonLd(res.body);
 
   if (blocks.length === 0) {
     lines.push('Sin bloques JSON-LD en esta página.');
     return lines;
   }
 
-  const entities = [];
-  for (const block of blocks) {
-    if (Array.isArray(block['@graph'])) entities.push(...block['@graph']);
-    else entities.push(block);
-  }
+  const entities = flattenEntities(blocks);
   lines.push(`Bloques JSON-LD: ${blocks.length}. Entidades: ${entities.map((e) => e['@type']).join(', ')}`);
 
-  const events = entities.filter((e) => e['@type'] === 'MusicEvent' || e['@type'] === 'Event');
+  const events = entities.filter(isEvent);
   if (events.length === 0) {
     lines.push('Sin MusicEvent/Event en esta página (esperado fuera de /conciertos).');
     return lines;
@@ -186,75 +185,64 @@ async function checkSchema() {
 }
 
 // --- 4. GSC indexation, 3 states --------------------------------------------
-function base64url(input) {
-  return Buffer.from(input).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-function makeJwt(sa, scope) {
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const claim = { iss: sa.client_email, scope, aud: sa.token_uri, exp: now + 3600, iat: now };
-  const unsigned = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(claim))}`;
-  const signer = createSign('RSA-SHA256');
-  signer.update(unsigned);
-  signer.end();
-  const signature = signer.sign(sa.private_key).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return `${unsigned}.${signature}`;
-}
-async function getAccessToken(sa, scope) {
-  const jwt = makeJwt(sa, scope);
-  const res = await fetch(sa.token_uri, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
-  });
-  const body = await res.json();
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status} ${JSON.stringify(body)}`);
-  return body.access_token;
-}
-
-async function checkIndexation() {
-  const lines = [];
+// Returns { ok: true, token } or { ok: false, reason } — never throws, so the
+// caller renders the third state instead of dying.
+async function gscToken() {
   let sa;
   try {
-    sa = JSON.parse(readFileSync(KEY_PATH, 'utf8'));
+    sa = loadServiceAccount(KEY_PATH);
   } catch (e) {
-    lines.push(`NO VERIFICABLE — no se pudo leer la credencial GSC (${KEY_PATH}): ${e.message}`);
-    return lines;
+    return { ok: false, reason: `no se pudo leer la credencial GSC (${KEY_PATH}): ${e.message}` };
   }
-
-  let token;
   try {
-    token = await getAccessToken(sa, 'https://www.googleapis.com/auth/webmasters.readonly');
+    return { ok: true, token: await getAccessToken(sa, GSC_READONLY_SCOPE) };
   } catch (e) {
-    lines.push(`NO VERIFICABLE — falló la autenticación contra la API de GSC: ${e.message}`);
-    return lines;
+    return { ok: false, reason: `falló la autenticación contra la API de GSC: ${e.message}` };
   }
+}
 
+// One URL Inspection call. Returns { ok: true, result } (result has
+// verdict/coverageState/lastCrawlTime/robotsTxtState) or { ok: false, reason }.
+async function inspectUrl(token, url) {
   try {
     const res = await fetch('https://searchconsole.googleapis.com/v1/urlInspection/index:inspect', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ inspectionUrl: canonicalUrl, siteUrl: `${SITE}/` }),
+      body: JSON.stringify({ inspectionUrl: url, siteUrl: `${SITE}/` }),
     });
     const body = await res.json();
     if (!res.ok) {
       // Google's own API call failed (auth, quota, malformed) — this is
       // "we could not ask", not "Google said no". Never render as indexed=false.
-      lines.push(`NO VERIFICABLE — la llamada a la API falló: HTTP ${res.status} ${JSON.stringify(body)}`);
-      return lines;
+      return { ok: false, reason: `la llamada a la API falló: HTTP ${res.status} ${JSON.stringify(body)}` };
     }
     const r = body?.inspectionResult?.indexStatusResult;
     if (!r || !r.coverageState) {
-      lines.push('NO VERIFICABLE — la API respondió sin coverageState (respuesta inesperada).');
-      return lines;
+      return { ok: false, reason: 'la API respondió sin coverageState (respuesta inesperada).' };
     }
-    lines.push(`${classifyIndexation(r.verdict)} — coverageState: "${r.coverageState}" (verdict: ${r.verdict ?? 'N/D'})`);
-    if (r.lastCrawlTime) lines.push(`Último crawl de Google: ${r.lastCrawlTime}`);
-    if (r.robotsTxtState) lines.push(`robots.txt state: ${r.robotsTxtState}`);
-    lines.push(`URL inspeccionada: ${canonicalUrl}`);
+    return { ok: true, result: r };
   } catch (e) {
-    lines.push(`NO VERIFICABLE — excepción durante la inspección: ${e.message}`);
+    return { ok: false, reason: `excepción durante la inspección: ${e.message}` };
   }
+}
+
+async function checkIndexation({ canonicalUrl }) {
+  const lines = [];
+  const auth = await gscToken();
+  if (!auth.ok) {
+    lines.push(`NO VERIFICABLE — ${auth.reason}`);
+    return lines;
+  }
+  const ins = await inspectUrl(auth.token, canonicalUrl);
+  if (!ins.ok) {
+    lines.push(`NO VERIFICABLE — ${ins.reason}`);
+    return lines;
+  }
+  const r = ins.result;
+  lines.push(`${classifyIndexation(r.verdict)} — coverageState: "${r.coverageState}" (verdict: ${r.verdict ?? 'N/D'})`);
+  if (r.lastCrawlTime) lines.push(`Último crawl de Google: ${r.lastCrawlTime}`);
+  if (r.robotsTxtState) lines.push(`robots.txt state: ${r.robotsTxtState}`);
+  lines.push(`URL inspeccionada: ${canonicalUrl}`);
   return lines;
 }
 
@@ -267,6 +255,46 @@ async function fetchSafe(url) {
   } catch {
     return { status: null, body: null };
   }
+}
+
+function extractCanonical(html) {
+  const m = html.match(/<link rel="canonical" href="([^"]+)"/);
+  return m ? m[1] : null;
+}
+
+// Anchor tags only — a bare href="..." regex also catches favicons,
+// preload/stylesheet links, and hashed asset URLs, which are not
+// navigable pages and would fill the "missing from sitemap" list with
+// noise (CSS bundles, images) instead of real orphan pages.
+function extractInternalLinks(html) {
+  const linked = new Set();
+  for (const m of html.matchAll(/<a\s[^>]*href="(\/[^"#]*)"/g)) {
+    linked.add(m[1].replace(/\/$/, '') || '/');
+  }
+  return linked;
+}
+
+// { blocks: parsed objects, invalid: count of <script type=ld+json> that failed JSON.parse }
+function parseJsonLd(html) {
+  const blocks = [];
+  let invalid = 0;
+  for (const m of html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
+    try { blocks.push(JSON.parse(m[1])); } catch { invalid++; }
+  }
+  return { blocks, invalid };
+}
+
+function flattenEntities(blocks) {
+  const entities = [];
+  for (const block of blocks) {
+    if (Array.isArray(block['@graph'])) entities.push(...block['@graph']);
+    else entities.push(block);
+  }
+  return entities;
+}
+
+function isEvent(e) {
+  return e['@type'] === 'MusicEvent' || e['@type'] === 'Event';
 }
 
 // Classify from the `verdict` enum, never from substring-matching coverageState:
@@ -306,14 +334,193 @@ function selfTest() {
   process.exit(bad === 0 ? 0 : 1);
 }
 
-async function main() {
-  if (process.argv.includes('--self-test')) return selfTest();
-  console.log(`=== SEO audit on-demand: ${canonicalUrl} ===\n`);
+// --- --all: deterministic findings menu ---------------------------------------
+const SEVERITY_ORDER = { 'blocks-index': 0, 'blocks-rich-result': 1, hygiene: 2 };
+const GSC_NOT_VERIFIABLE = 'NO VERIFICABLE';
+// Google's own guidance: ~50-60 chars for titles, ~50-160 for descriptions.
+const TITLE_MIN = 10, TITLE_MAX = 60;
+const DESC_MIN = 50, DESC_MAX = 160;
 
-  section('1. Trailing-slash / canonical', await checkTrailingSlash());
-  section('2. Paridad sitemap vs enlaces internos', await checkSitemapParity());
-  section('3. Completitud de schema (MusicEvent/Event)', await checkSchema());
-  section('4. Indexación real en GSC (3 estados)', await checkIndexation());
+function decodeEntities(s) {
+  return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
+}
+function metaContent(html, attrRe) {
+  const m = html.match(new RegExp(`<meta\\s+[^>]*${attrRe}[^>]*>`, 'i'));
+  if (!m) return null;
+  const c = m[0].match(/content="([^"]*)"/i);
+  return c ? decodeEntities(c[1]) : '';
+}
+function pageFacts(html) {
+  const t = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  return {
+    title: t ? decodeEntities(t[1]) : null,
+    description: metaContent(html, 'name="description"'),
+    ogImage: metaContent(html, 'property="og:image"'),
+    h1Count: (html.match(/<h1[\s>]/gi) || []).length,
+    canonical: extractCanonical(html),
+    jsonLd: parseJsonLd(html),
+    links: extractInternalLinks(html),
+  };
+}
+
+async function auditAll() {
+  const { urls, source: url_source } = await fetchSiteUrls(SITE);
+  const findings = [];
+  const add = (url, check, severity, detail) => {
+    const p = new URL(url).pathname;
+    findings.push({ id: `${check}:${p}`, url, check, severity, detail });
+  };
+
+  // 1. Fetch every page once; collect facts.
+  const pages = new Map();
+  for (const url of urls) {
+    const res = await fetchSafe(url);
+    pages.set(url, { status: res.status, facts: res.body ? pageFacts(res.body) : null });
+  }
+
+  // 2. Sitemap parity, with the whole site's anchors as the "linked" set
+  //    (every sitemap page is fetched anyway, so /archivo/<slug> posts linked
+  //    only from /archivo are visible here — the single-URL mode's blind spot
+  //    does not apply).
+  const sitemapPaths = new Set(urls.map((u) => new URL(u).pathname));
+  const linkedPaths = new Set();
+  for (const { facts } of pages.values()) {
+    if (facts) for (const p of facts.links) linkedPaths.add(p);
+  }
+  for (const p of linkedPaths) {
+    if (!sitemapPaths.has(p) && p !== '/admin' && !p.startsWith('/admin/') && !/\.\w+$/.test(p)) {
+      add(`${SITE}${p}`, 'sitemap-missing', 'blocks-index', `Enlazada internamente pero ausente del sitemap (añadir a src/pages/sitemap.xml.ts si debe indexarse).`);
+    }
+  }
+
+  // 3. Per-page checks.
+  const titles = new Map(), descs = new Map();
+  for (const [url, { status, facts }] of pages) {
+    const p = new URL(url).pathname;
+    if (status !== 200) {
+      add(url, 'http-status', 'blocks-index', `La URL canónica responde HTTP ${status ?? 'ERROR'} (esperado 200).`);
+    }
+    if (!linkedPaths.has(p) && p !== '/') {
+      add(url, 'sitemap-orphan', 'blocks-index', 'En sitemap pero sin ningún enlace interno <a href> en las páginas del sitemap: huérfana.');
+    }
+    if (p !== '/') {
+      const variant = await fetchSafe(`${url}/`);
+      if (variant.status && variant.status < 400) {
+        add(url, 'trailing-slash-variant', 'hygiene', `${p}/ también responde HTTP ${variant.status}: dos URLs para el mismo contenido; el canonical debe apuntar a la forma sin barra.`);
+      }
+    }
+    if (!facts) continue;
+
+    if (!facts.canonical) {
+      add(url, 'canonical-missing', 'blocks-index', 'Sin <link rel="canonical">.');
+    } else if (facts.canonical !== url) {
+      add(url, 'canonical-mismatch', 'blocks-index', `<link rel="canonical"> = ${facts.canonical}, distinto de la URL propia ${url}.`);
+    }
+
+    if (facts.title === null || facts.title === '') {
+      add(url, 'title-missing', 'hygiene', 'Sin <title>.');
+    } else {
+      if (facts.title.length < TITLE_MIN || facts.title.length > TITLE_MAX) {
+        add(url, 'title-length', 'hygiene', `<title> tiene ${facts.title.length} chars (recomendado ${TITLE_MIN}-${TITLE_MAX}): "${facts.title}"`);
+      }
+      titles.set(url, facts.title);
+    }
+
+    if (facts.description === null || facts.description === '') {
+      add(url, 'meta-description-missing', 'hygiene', 'Sin <meta name="description">.');
+    } else {
+      if (facts.description.length < DESC_MIN || facts.description.length > DESC_MAX) {
+        add(url, 'meta-description-length', 'hygiene', `meta description tiene ${facts.description.length} chars (recomendado ${DESC_MIN}-${DESC_MAX}).`);
+      }
+      descs.set(url, facts.description);
+    }
+
+    if (facts.h1Count !== 1) {
+      add(url, 'h1-count', 'hygiene', `${facts.h1Count} <h1> en la página (esperado exactamente 1).`);
+    }
+    if (!facts.ogImage) {
+      add(url, 'og-image-missing', 'hygiene', 'Sin <meta property="og:image">.');
+    }
+    if (facts.jsonLd.invalid > 0) {
+      add(url, 'jsonld-invalid', 'blocks-rich-result', `${facts.jsonLd.invalid} bloque(s) JSON-LD no parsean como JSON.`);
+    }
+    const events = flattenEntities(facts.jsonLd.blocks).filter(isEvent);
+    events.forEach((ev, i) => {
+      const missingRequired = EVENT_REQUIRED.filter((k) => !ev[k]);
+      const missingRecommended = EVENT_RECOMMENDED.filter((k) => !ev[k]);
+      const label = `Event #${i + 1} (${ev.name ?? 'sin nombre'})`;
+      if (missingRequired.length) {
+        add(url, `event-required-missing#${i + 1}`, 'blocks-rich-result', `${label}: faltan campos obligatorios ${missingRequired.join(', ')}.`);
+      }
+      if (missingRecommended.length) {
+        add(url, `event-recommended-missing#${i + 1}`, 'hygiene', `${label}: recomendados ausentes ${missingRecommended.join(', ')}.`);
+      }
+    });
+  }
+
+  // 4. Cross-page duplicates.
+  const dupes = (map, check, what) => {
+    const byValue = new Map();
+    for (const [url, v] of map) byValue.set(v, [...(byValue.get(v) || []), url]);
+    for (const [v, list] of byValue) {
+      if (list.length < 2) continue;
+      for (const url of list) {
+        const others = list.filter((u) => u !== url).map((u) => new URL(u).pathname).join(', ');
+        add(url, check, 'hygiene', `${what} duplicado con ${others}: "${v}"`);
+      }
+    }
+  };
+  dupes(titles, 'title-duplicate', '<title>');
+  dupes(descs, 'meta-description-duplicate', 'meta description');
+
+  // 5. GSC three-state per URL. One token, sequential calls (urlInspection is
+  //    rate-limited). If auth or a call fails the state is NO VERIFICABLE —
+  //    never "not indexed".
+  const gscState = new Map();
+  const auth = await gscToken();
+  const gsc = { verifiable: auth.ok, reason: auth.ok ? null : auth.reason };
+  if (auth.ok) {
+    for (const url of urls) {
+      const ins = await inspectUrl(auth.token, url);
+      if (ins.ok) {
+        gscState.set(url, ins.result.coverageState);
+        if (classifyIndexation(ins.result.verdict) === 'NO') {
+          add(url, 'gsc-not-indexed', 'blocks-index', `GSC coverageState "${ins.result.coverageState}" (verdict ${ins.result.verdict}); último crawl: ${ins.result.lastCrawlTime ?? 'nunca'}.`);
+        }
+      } else {
+        gscState.set(url, GSC_NOT_VERIFIABLE);
+      }
+      await new Promise((r) => setTimeout(r, 300));
+    }
+  }
+
+  for (const f of findings) f.gsc_state = gscState.get(f.url) ?? GSC_NOT_VERIFIABLE;
+  findings.sort((a, b) =>
+    (SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
+    || a.url.localeCompare(b.url)
+    || a.check.localeCompare(b.check));
+
+  return { generated_at: new Date().toISOString(), site: SITE, url_source, urls_checked: urls.length, gsc, findings };
+}
+
+async function main() {
+  if (flags.has('--self-test')) return selfTest();
+
+  if (ALL_MODE) {
+    // Only the JSON object goes to stdout so callers can pipe it straight
+    // into JSON.parse; anything diagnostic goes to stderr.
+    const report = await auditAll();
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+
+  const t = target(rawArg);
+  console.log(`=== SEO audit on-demand: ${t.canonicalUrl} ===\n`);
+
+  section('1. Trailing-slash / canonical', await checkTrailingSlash(t));
+  section('2. Paridad sitemap vs enlaces internos', await checkSitemapParity(t));
+  section('3. Completitud de schema (MusicEvent/Event)', await checkSchema(t));
+  section('4. Indexación real en GSC (3 estados)', await checkIndexation(t));
 
   for (const s of out.sections) {
     console.log(`--- ${s.title} ---`);

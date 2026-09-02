@@ -4,13 +4,14 @@
 // leading indicator at current volume (8 impressions/28d = noise) — see
 // gsc-report-delta.mjs for how it's presented.
 //
-// Reuses the JWT auth flow from scripts/verify-gsc-credential.mjs /
-// scripts/gsc-audit-check.mjs (no new deps, node builtins only).
-import { readFileSync, appendFileSync } from 'node:fs';
-import { createSign } from 'node:crypto';
+// Auth via scripts/lib/gsc-auth.mjs, URL list via scripts/lib/site-urls.mjs
+// (no new deps, node builtins only).
+import { appendFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { loadServiceAccount, getAccessToken, GSC_READONLY_SCOPE } from './lib/gsc-auth.mjs';
+import { fetchSiteUrls } from './lib/site-urls.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -35,36 +36,6 @@ const SITE_URL = positional[1] || 'https://legacyoftheseas.pages.dev/';
 if (!KEY_PATH) {
   console.error('Usage: node gsc-snapshot.mjs <path-to-service-account.json> [siteUrl] [--note "text"]');
   process.exit(1);
-}
-
-function base64url(input) {
-  return Buffer.from(input).toString('base64')
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function makeJwt(sa, scope) {
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const claim = { iss: sa.client_email, scope, aud: sa.token_uri, exp: now + 3600, iat: now };
-  const unsigned = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(claim))}`;
-  const signer = createSign('RSA-SHA256');
-  signer.update(unsigned);
-  signer.end();
-  const signature = signer.sign(sa.private_key).toString('base64')
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return `${unsigned}.${signature}`;
-}
-
-async function getAccessToken(sa, scope) {
-  const jwt = makeJwt(sa, scope);
-  const res = await fetch(sa.token_uri, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
-  });
-  const body = await res.json();
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status} ${JSON.stringify(body)}`);
-  return body.access_token;
 }
 
 async function inspectUrl(token, url) {
@@ -134,22 +105,13 @@ function urlToKey(url) {
 }
 
 async function main() {
-  const sa = JSON.parse(readFileSync(KEY_PATH, 'utf8'));
-  const token = await getAccessToken(sa, 'https://www.googleapis.com/auth/webmasters.readonly');
+  const sa = loadServiceAccount(KEY_PATH);
+  const token = await getAccessToken(sa, GSC_READONLY_SCOPE);
 
-  // No trailing slash (except root) — must match src/pages/sitemap.xml.ts and
-  // the internal links in Header.astro. Inspecting the trailing-slash variants
-  // would measure URL strings the site no longer publishes, so indexation
-  // would read as permanently broken. Keep these three in sync.
-  const urls = [
-    'https://legacyoftheseas.pages.dev/',
-    'https://legacyoftheseas.pages.dev/conciertos',
-    'https://legacyoftheseas.pages.dev/nosotros',
-    'https://legacyoftheseas.pages.dev/tienda',
-    'https://legacyoftheseas.pages.dev/archivo',
-    'https://legacyoftheseas.pages.dev/contacto',
-    'https://legacyoftheseas.pages.dev/archivo/2024-10-04-lanzamiento-leyendas',
-  ];
+  // URL list comes from the live sitemap (canonical no-trailing-slash form),
+  // falling back to the frozen list in lib/site-urls.mjs only if the fetch
+  // fails. `url_source` in the record says which one was measured.
+  const { urls, source: url_source } = await fetchSiteUrls(SITE_URL);
 
   // Sequential, gentle — the urlInspection API is rate-limited (2000/day).
   const urlResults = {};
@@ -196,6 +158,7 @@ async function main() {
     indexed,
     errored,
     total_urls: urls.length,
+    url_source,
     sitemap_downloaded,
     sitemap_pending,
     sitemap_last_submitted,

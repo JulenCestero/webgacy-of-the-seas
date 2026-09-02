@@ -1,8 +1,7 @@
 // Throwaway verification script for GSC service account credential.
-// Uses Node built-in crypto to sign a JWT and exchange it for an access token
-// (no google-auth-library / googleapis npm deps needed).
-import { readFileSync } from 'node:fs';
-import { createSign } from 'node:crypto';
+// Auth via scripts/lib/gsc-auth.mjs: Node built-in crypto signs a JWT and
+// exchanges it for an access token (no google-auth-library / googleapis deps).
+import { loadServiceAccount, getAccessToken, GSC_READONLY_SCOPE } from './lib/gsc-auth.mjs';
 
 const KEY_PATH = process.argv[2];
 const SITE_URL = process.argv[3] || 'https://legacyoftheseas.pages.dev/';
@@ -12,55 +11,14 @@ if (!KEY_PATH) {
   process.exit(1);
 }
 
-const sa = JSON.parse(readFileSync(KEY_PATH, 'utf8'));
-
-function base64url(input) {
-  return Buffer.from(input).toString('base64')
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function makeJwt(scope) {
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const claim = {
-    iss: sa.client_email,
-    scope,
-    aud: sa.token_uri,
-    exp: now + 3600,
-    iat: now,
-  };
-  const unsigned = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(claim))}`;
-  const signer = createSign('RSA-SHA256');
-  signer.update(unsigned);
-  signer.end();
-  const signature = signer.sign(sa.private_key).toString('base64')
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return `${unsigned}.${signature}`;
-}
-
-async function getAccessToken(scope) {
-  const jwt = makeJwt(scope);
-  const res = await fetch(sa.token_uri, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: jwt,
-    }),
-  });
-  const body = await res.json();
-  if (!res.ok) {
-    throw new Error(`Token exchange failed: ${res.status} ${JSON.stringify(body)}`);
-  }
-  return body.access_token;
-}
+const sa = loadServiceAccount(KEY_PATH);
 
 async function main() {
   console.log(`client_email domain check: ends with @${sa.client_email.split('@')[1] || '(unknown)'}`);
 
   let token;
   try {
-    token = await getAccessToken('https://www.googleapis.com/auth/webmasters.readonly');
+    token = await getAccessToken(sa, GSC_READONLY_SCOPE);
     console.log('AUTH: success (obtained access token)');
   } catch (e) {
     console.log('AUTH: FAILED');

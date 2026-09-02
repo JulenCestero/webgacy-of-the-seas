@@ -12,8 +12,9 @@
 //
 // Style matches scripts/gsc-snapshot.mjs: node builtins only, no new deps,
 // argv-based, clear console output, exit 0 on success / 1 on hard failure.
-const HOST = 'legacyoftheseas.pages.dev';
-const SITE = `https://${HOST}`;
+import { SITE, fetchSiteUrls } from './lib/site-urls.mjs';
+
+const HOST = new URL(SITE).host;
 
 // IndexNow key. Fixed and committed on purpose — this is NOT a secret. The
 // protocol requires it to be publicly readable forever at KEY_LOCATION below
@@ -27,23 +28,17 @@ const KEY_LOCATION = `${SITE}/${KEY}.txt`;
 
 const ENDPOINT = 'https://api.indexnow.org/indexnow';
 
-// Same 7 URLs the sitemap publishes (src/pages/sitemap.xml.ts): the 6 static
-// pages plus the one archive post known at the time this script was written.
-// Non-trailing-slash (except root) — must match sitemap.xml.ts and
-// scripts/gsc-snapshot.mjs; a trailing slash would name a URL string the site
-// never actually serves. Keep these three files in sync.
-const DEFAULT_URLS = [
-  `${SITE}/`,
-  `${SITE}/conciertos`,
-  `${SITE}/nosotros`,
-  `${SITE}/tienda`,
-  `${SITE}/archivo`,
-  `${SITE}/contacto`,
-  `${SITE}/archivo/2024-10-04-lanzamiento-leyendas`,
-];
-
+// Default URL list = whatever the live sitemap publishes (canonical
+// no-trailing-slash form), via lib/site-urls.mjs; its frozen list is the
+// offline fallback.
 const args = process.argv.slice(2);
-const urlList = args.length > 0 ? args : DEFAULT_URLS;
+let urlSource = 'argv';
+let urlList = args;
+if (args.length === 0) {
+  const r = await fetchSiteUrls(SITE);
+  urlList = r.urls;
+  urlSource = r.source;
+}
 
 for (const u of urlList) {
   if (!u.startsWith(SITE)) {
@@ -76,7 +71,7 @@ function isSuccess(status) {
 }
 
 async function main() {
-  console.log(`IndexNow: enviando ${urlList.length} URL(s) a ${ENDPOINT}`);
+  console.log(`IndexNow: enviando ${urlList.length} URL(s) a ${ENDPOINT} (lista: ${urlSource})`);
   console.log('Cubre: Bing, Yandex, Seznam, Naver, Yep (indirectamente DuckDuckGo/Brave via Bing).');
   console.log('NO cubre Google — Google no participa en IndexNow.');
   urlList.forEach((u) => console.log(`  - ${u}`));

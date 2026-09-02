@@ -34,7 +34,7 @@ El sitemap listaba las variantes **con** barra mientras los enlaces internos y e
 
 ## Bloqueador abierto (2026-08-03)
 
-- [ ] El sitemap **nunca se ha descargado**: la API devuelve `isPending: true` y ningún campo `lastDownloaded` desde el envío del 2026-02-11 (~6 meses). Mientras 6/7 URLs sigan desconocidas para Google, el loop SEO está optimizando páginas que Google no rastrea.
+- [ ] El sitemap **nunca se ha descargado**: la API devuelve `isPending: true` y ningún campo `lastDownloaded` desde el envío del 2026-02-11 (~6 meses). Mientras 5/7 URLs sigan desconocidas para Google (`/` y `/contacto` sí indexadas), el loop SEO está optimizando páginas que Google no rastrea.
 
 ## Vídeos embebidos — no es un error
 

@@ -37,7 +37,7 @@ Allow: /
 Disallow: /admin/
 Disallow: /r2/
 
-Sitemap: https://legacyoftheseas.pages.dev/sitemap-index.xml
+Sitemap: https://legacyoftheseas.pages.dev/sitemap.xml
 ```
 
 - Bloquea correctamente `/admin/` y `/r2/`

@@ -14,6 +14,7 @@ interface Props {
   startTime?: string | null;
   timezone?: string | null;
   bandsintownUrl?: string | null;
+  cronicaUrl?: string | null;
 }
 
 const {
@@ -28,6 +29,7 @@ const {
   startTime,
   timezone,
   bandsintownUrl,
+  cronicaUrl = null,
 } = Astro.props;
 
 // WEB-03/D-07: scoping por evento. Fail-closed — sin ID numerico extraible
@@ -123,6 +125,11 @@ const googleCalendarEventUrl = "https://calendar.google.com/calendar/render?" + 
           <p class={`${isPast ? 'text-gray-600' : 'text-gray-400'}`}>
             {city}
           </p>
+          {cronicaUrl && (
+            <a href={cronicaUrl} class="text-band-sea hover:text-band-gold transition-colors font-medium">
+              Leer la crónica →
+            </a>
+          )}
         </div>
 
         <!-- Action -->

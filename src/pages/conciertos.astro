@@ -1,6 +1,6 @@
 ---
-import { createDb, concerts } from "../lib/db";
-import { and, asc, desc, gte, lt, lte } from "drizzle-orm";
+import { createDb, concerts, posts } from "../lib/db";
+import { and, asc, desc, eq, gte, inArray, lt, lte } from "drizzle-orm";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ConcertCard from "../components/ConcertCard.astro";
 import SocialLinks from "../components/SocialLinks.astro";
@@ -39,6 +39,16 @@ const upcomingConcerts = await db.select().from(concerts)
 const pastConcerts = await db.select().from(concerts)
   .where(and(lt(concerts.date, now), lte(concerts.announceAt, nowIso)))
   .orderBy(desc(concerts.date));
+
+// Fase 7 (D-13): la crónica publicada se enlaza desde la tarjeta; posts.concert_id == concerts.id (D5)
+const pastIds = pastConcerts.map((c) => c.id);
+const cronicas = pastIds.length > 0
+  ? await db.select({ slug: posts.slug, concertId: posts.concertId }).from(posts)
+      .where(and(eq(posts.published, true), inArray(posts.concertId, pastIds)))
+  : [];
+const cronicaByConcertId = new Map(
+  cronicas.filter((c) => c.concertId).map((c) => [c.concertId as string, `/archivo/${c.slug}`])
+);
 // Generate MusicEvent schema for upcoming concerts.
 //
 // startDate/endDate con hora real cuando la hay: Google la usa para decidir si
@@ -213,12 +223,14 @@ const hasBitWidget = upcomingConcerts.some(
         <div class="space-y-4 max-w-4xl">
           {pastConcerts.map((concert) => (
             <ConcertCard
+              id={concert.id}
               title={concert.title}
               date={new Date(concert.date)}
               venue={concert.venue}
               city={concert.city}
               isSoldOut={concert.isSoldOut}
               isPast={true}
+              cronicaUrl={cronicaByConcertId.get(concert.id) ?? null}
             />
           ))}
         </div>

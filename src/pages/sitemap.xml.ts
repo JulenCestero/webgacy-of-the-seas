@@ -1,16 +1,18 @@
 import type { APIContext } from "astro";
 import { createDb, posts } from "../lib/db";
+import { eq } from "drizzle-orm";
 
 export async function GET(context: APIContext): Promise<Response> {
   const site = "https://legacyoftheseas.pages.dev";
   const runtimeEnv = (context.locals as any).runtime?.env as Record<string, string> | undefined;
   const db = createDb(runtimeEnv);
 
+  // Fase 7 (D-11/D-12): borradores (published=0) fuera del listado, mismo patrón que announce_at en conciertos.astro
   const allPosts = await db.select({
     slug: posts.slug,
     date: posts.date,
     updatedAt: posts.updatedAt,
-  }).from(posts);
+  }).from(posts).where(eq(posts.published, true));
 
   const staticPages: Array<{ loc: string; changefreq: string; priority: string; lastmod?: string }> = [
     // No trailing slash (except root): must match the internal links in

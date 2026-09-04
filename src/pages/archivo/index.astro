@@ -1,6 +1,6 @@
 ---
 import { createDb, posts } from "../../lib/db";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 // Get runtime env from Cloudflare
@@ -8,7 +8,8 @@ const runtimeEnv = Astro.locals.runtime?.env as Record<string, string> | undefin
 const db = createDb(runtimeEnv);
 
 // Get all posts sorted by date (newest first)
-const sortedPosts = await db.select().from(posts).orderBy(desc(posts.date));
+// Fase 7 (D-11/D-12): borradores (published=0) fuera del listado, mismo patrón que announce_at en conciertos.astro
+const sortedPosts = await db.select().from(posts).where(eq(posts.published, true)).orderBy(desc(posts.date));
 
 // Format date helper
 function formatDate(date: Date): string {

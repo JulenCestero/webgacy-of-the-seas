@@ -67,6 +67,10 @@ export const posts = sqliteTable('posts', {
   body: text('body'), // Contenido markdown
   createdAt: text('created_at').default(''),
   updatedAt: text('updated_at').default(''),
+  // Fase 7 (D-12): concert_id inmutable del concierto (D5); NULL en crónicas legacy
+  concertId: text('concert_id'),
+  // Fase 7 (D-12): 0 = borrador (solo por URL directa), 1 = publicado (listado + sitemap + enlace desde el concierto)
+  published: integer('published', { mode: 'boolean' }).notNull().default(false),
 });
 
 // Configuración general (key-value)

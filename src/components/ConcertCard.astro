@@ -179,16 +179,17 @@ const googleCalendarEventUrl = "https://calendar.google.com/calendar/render?" + 
       </div>
 
       {!isPast && bitEventId && (
-        <div class="mt-2">
+        <div class="mt-2 bit-widget-wrap">
           <a
             class="bit-widget-initializer"
             data-artist-name={BIT_ARTIST_NAME}
             data-events-to-display={bitEventId}
+            data-display-details="false"
             data-background-color="rgba(10,10,10,1)"
             data-separator-color="rgba(0,206,209,0.2)"
             data-text-color="rgba(0,206,209,1)"
             data-font="Inter"
-            data-auto-style="true"
+            data-auto-style="false"
           >
           </a>
         </div>

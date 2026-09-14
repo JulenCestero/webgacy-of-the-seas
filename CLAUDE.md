@@ -93,4 +93,4 @@ source .envrc && git push https://${GH_TOKEN}@github.com/JulenCestero/webgacy-of
 
 **Integraciones hardcodeadas** — Mailchimp en `NewsletterSignup.astro` (`gmail.us2.list-manage.com`, u=`e65f0969bdae89ce6a523cdc2`, id=`dcd925529c`); Spotify en `SpotifyEmbed.astro` (album `2f2fEmQkP6dBwOTNs47so9`).
 
-**Commits** — `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
+**Commits** — `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
